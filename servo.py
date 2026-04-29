@@ -11,19 +11,19 @@ servos = [0, 1]
 # Lætur servoa snúa í miðju
 def servo_init(servos):
     for servo_nr in servos:
-        #print("test", servo_nr)
+        #print("test", servo_nr) #----DEBUG
         kit.servo[servo_nr].angle = 90
 
 
 # Fall sem snýr völdum servo mótor, valinn snúning
 def move_servo(servo_nr, target_angle, speed=1):
     start_angle = kit.servo[servo_nr].angle # Sækji upphafsstöðu
-    print("Start angle:", start_angle)
-    print("Target angle:", target_angle)
+    #print("Start angle:", start_angle) #----DEBUG
+    #print("Target angle:", target_angle) #----DEBUG
     step = speed if start_angle < target_angle else -speed # Athugar hvort hann eigi að snúa til hægri eða vinstri
-    print("Step size:", step)
+    #print("Step size:", step) #----DEBUG
     for angle in range(int(start_angle), int(target_angle), int(step)):
-        print(angle)
+        #print(angle) #----DEBUG
         kit.servo[servo_nr].angle = angle
         time.sleep(0.02)
 

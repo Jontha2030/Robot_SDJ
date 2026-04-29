@@ -1,13 +1,14 @@
 import time
 from smbus import SMBus
-i2c_bus = SMBus(1)
-i2c_address = 0x70
-while 1:
-    i2c_bus.write_byte_data(i2c_address, 0, 0x51) # Tell sensor to scan in mm
-    high = i2c_bus.read_byte_data(i2c_address, 2) # Read the high byte of the value
-    #print(high) # print the value of High byte
-    low = i2c_bus.read_byte_data(i2c_address, 3) # Read the low byte of the value
-    #print(low) # print the value of low byte
-    current_value = high * 256 + low
-    print(current_value)
-    time.sleep(0.1) # Sleep for some
+
+def distance_scan():
+    bus = SMBus(1) # Þetta notar physical SDA og SCL pinnana á PI
+    # (GPIO 2 og 3)
+    i2c_addresses = [0x70, 0x71] # 
+    while True:
+        bus.write_byte_data(i2c_addresses[0], 0, 81) # Kveikji á vinstri skynjara
+        bus.write_byte_data(i2c_addresses[1], 0, 81) # Kveikji á hægri skynjara
+        print("Vinstri:",bus.read_byte_data(i2c_addresses[0], 2)," Hægri:",bus.read_byte_data(i2c_addresses[1],2))
+    
+
+distance_scan()
