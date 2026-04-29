@@ -6,8 +6,13 @@ kit = ServoKit(channels=8)
 
 # Skilgreina í hvaða númer servo'arnir eru tengdir á borðinu
 # eru frá 0-7 (8 pláss/channels)
-servo_1 = 0
-servo_2 = 1
+servos = [0, 1]
+
+# Lætur servoa snúa í miðju
+def servo_init(servos):
+    for servo_nr in servos:
+        kit.servo[servo_nr].angle = 90
+        
 
 # Fall sem snýr völdum servo mótor, valinn snúning
 def move_servo(servo_nr, target_angle, speed=1):
@@ -29,8 +34,10 @@ def move_servos():
     return 0
 
 
-def testing_servos():
+def testing_servos(servos):
+    servo_init(servos)
     move_servo(1,0,2)
 
     return 0
-testing_servos()
+
+testing_servos(servos)
