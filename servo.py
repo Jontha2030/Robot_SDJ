@@ -14,6 +14,7 @@ def move_servo(servo_nr, target_angle, speed=1):
     start_angle = kit.servo[servo_nr].angle # Sækji upphafsstöðu
     step = speed if start_angle > target_angle else -speed # Athugar hvort hann eigi að snúa til hægri eða vinstri
     for angle in range(start_angle, target_angle, step):
+        print(angle)
         kit.servo[servo_nr].angle = angle
         time.sleep(0.02)
             
