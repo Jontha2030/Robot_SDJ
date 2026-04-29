@@ -1,0 +1,27 @@
+name: Deploy to Pi
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Sækja nýjustu útgáfu á Pi
+        run: |
+          cd /home/usersdj/Desktop/Robot_SDJ
+          git fetch origin
+          git reset --hard origin/main
+          echo "Sótt $(git rev-parse --short HEAD)"
+      
+      - name: Endurræsa robot.service
+        run: |
+          sudo /bin/systemctl restart robot.service
+          echo "robot.service endurræst"
+      
+      - name: Sýna stöðu
+        run: |
+          sleep 2
+          sudo systemctl status robot.service --no-pager || true
