@@ -9,6 +9,6 @@ def distance_scan():
         bus.write_byte_data(i2c_addresses[0], 0, 81) # Kveikji á vinstri skynjara
         bus.write_byte_data(i2c_addresses[1], 0, 81) # Kveikji á hægri skynjara
         print("Vinstri:",bus.read_byte_data(i2c_addresses[0], 2)," Hægri:",bus.read_byte_data(i2c_addresses[1],2))
-    
+        time.sleep(0.1)
 
 distance_scan()
