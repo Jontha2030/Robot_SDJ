@@ -36,7 +36,5 @@ while running:
     elif keys[pygame.K_LEFT]:
         left()
 
-    else:
-        stop()
 
 pygame.quit()
