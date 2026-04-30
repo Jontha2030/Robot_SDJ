@@ -1,11 +1,13 @@
 import time
 import smbus
 
-I2C_ADDRESS = 0x50
-bus = smbus.SMBus(1)
 
 
+#Sendir boð til mótor
 def send_motors(m1, m2):
+    I2C_ADDRESS = 0x50
+    bus = smbus.SMBus(1)
+
     m1_speed = abs(m1)
     m1_sign = 0 if m1 >= 0 else 1
 
@@ -16,21 +18,26 @@ def send_motors(m1, m2):
     bus.write_i2c_block_data(I2C_ADDRESS, 0x00, data)
 
 
+#Seigir mótor að fara áfram
 def forward():
     send_motors(100, 100)
 
 
+#Seigir mótor að fara tilbaka
 def backwards():
     send_motors(-100, -100)
 
 
+#Seigir mótor að fara til hægri
 def right():
     send_motors(100, 0)
 
 
+#Seigir mótor að fara til vinstri
 def left():
     send_motors(0, 100)
 
 
+#Seigir mótor að stoppa
 def stop():
     send_motors(0, 0)
