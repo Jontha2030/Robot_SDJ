@@ -2,39 +2,42 @@
 #import servo as servoMotors
 from motor import send_motors, forward, backwards, right, left, stop
 import time
-import pygame
+from pynput import keyboard
 
+pressed = set()
 
-pygame.init()
-screen = pygame.display.set_mode((300, 300))  # needed for keyboard input
+def on_press(key):
+    pressed.add(key)
 
-running = True
-while running:
-    # Handle events (VERY important)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            stop()
-            running = False
-
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_q:
-                stop()
-                running = False
-
-    # Check held keys
-    keys = pygame.key.get_pressed()
-
-    if keys[pygame.K_UP]:
+    if key == keyboard.Key.up:
         forward()
-
-    elif keys[pygame.K_DOWN]:
+    elif key == keyboard.Key.down:
         backwards()
-
-    elif keys[pygame.K_RIGHT]:
+    elif key == keyboard.Key.right:
         right()
-
-    elif keys[pygame.K_LEFT]:
+    elif key == keyboard.Key.left:
         left()
 
+    # press q to quit
+    try:
+        if key.char == "q":
+            stop()
+            return False
+    except AttributeError:
+        pass
 
-pygame.quit()
+def on_release(key):
+    pressed.discard(key)
+
+    if key in [
+        keyboard.Key.up,
+        keyboard.Key.down,
+        keyboard.Key.right,
+        keyboard.Key.left
+    ]:
+        stop()
+
+with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
+    listener.join()
+
+stop()
