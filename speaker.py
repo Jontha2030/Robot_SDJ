@@ -6,6 +6,7 @@ class Speaker:
     def __init__(self, songs_folder="songs"):
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.songs_folder = os.path.join(script_dir, songs_folder)
+        pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=4096)
         pygame.mixer.init()
         print(f"Speaker tilbúinn. Lög í möppu: {self.songs_folder}")
     
