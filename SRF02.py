@@ -7,13 +7,16 @@ def distance_scan():
     i2c_addresses = [0x70, 0x71] # Listi yfir addressur á sensorum
     while True:
         bus.write_byte_data(i2c_addresses[0], 0, 0x51) # Kveikji á vinstri skynjara
-        bus.write_byte_data(i2c_addresses[1], 0, 0x51) # Kveikji á hægri skynjara
-        high_v = bus.read_byte_data(i2c_addresses[0],2)
-        high_h = bus.read_byte_data(i2c_addresses[1],2)
-
-        low_v = bus.read_byte_data(i2c_addresses[0],3)
-        low_h = bus.read_byte_data(i2c_addresses[1],3)
-        print("Vinstri:",high_v * 256 + low_v," Hægri:", high_h * 256 + low_h)
         time.sleep(0.1)
+        high_v = bus.read_byte_data(i2c_addresses[0],2)
+        low_v = bus.read_byte_data(i2c_addresses[0],3)
+
+        bus.write_byte_data(i2c_addresses[1], 0, 0x51) # Kveikji á hægri skynjara
+        time.sleep(0.1)
+        high_h = bus.read_byte_data(i2c_addresses[1],2)
+        low_h = bus.read_byte_data(i2c_addresses[1],3)
+
+        print("Vinstri:",high_v * 256 + low_v," Hægri:", high_h * 256 + low_h)
+
 
 distance_scan()
