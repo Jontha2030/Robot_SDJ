@@ -18,10 +18,11 @@ while True:
         left()
 
     elif tala == 'd':
-        right
+        right()
 
     elif tala == ' ':
         stop()
 
     elif tala == 'q':
+        stop()
         break
