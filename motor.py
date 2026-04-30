@@ -35,7 +35,7 @@ def right():
 
 #Seigir mótor að fara til vinstri
 def left():
-    send_motors(0, 100)
+    send_motors(0, -100)
 
 
 #Seigir mótor að stoppa
