@@ -4,6 +4,10 @@ from motor import send_motors, forward, backwards, right, left, stop
 import time
 import pygame
 
+
+pygame.init()
+screen = pygame.display.set_mode((300, 300))  # needed for keyboard input
+
 running = True
 while running:
     # Handle events (VERY important)
