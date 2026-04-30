@@ -2,42 +2,26 @@
 #import servo as servoMotors
 from motor import send_motors, forward, backwards, right, left, stop
 import time
-from pynput import keyboard
 
-pressed = set()
 
-def on_press(key):
-    pressed.add(key)
+while True:
 
-    if key == keyboard.Key.up:
+    tala = input()
+
+    if tala == 'w':
         forward()
-    elif key == keyboard.Key.down:
+
+    elif tala == 's':
         backwards()
-    elif key == keyboard.Key.right:
-        right()
-    elif key == keyboard.Key.left:
+
+    elif tala == 'a':
         left()
 
-    # press q to quit
-    try:
-        if key.char == "q":
-            stop()
-            return False
-    except AttributeError:
-        pass
+    elif tala == 'd':
+        right
 
-def on_release(key):
-    pressed.discard(key)
-
-    if key in [
-        keyboard.Key.up,
-        keyboard.Key.down,
-        keyboard.Key.right,
-        keyboard.Key.left
-    ]:
+    elif tala == ' ':
         stop()
 
-with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
-    listener.join()
-
-stop()
+    elif tala == 'q':
+        break
