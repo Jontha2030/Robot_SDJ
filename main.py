@@ -3,11 +3,11 @@
 from motor import send_motors, forward, backwards, right, left, stop
 from speaker import Speaker
 import time
-import controller as c
+from controller import controller_sturcture
 
 
 def call_controller():
-    c.controller()
+    controller_sturcture()
 
 
 def keyra_bil():

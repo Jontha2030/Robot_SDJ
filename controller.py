@@ -1,6 +1,6 @@
 from evdev import InputDevice, ecodes
 from motor import send_motors, forward, backwards, right, left, stop
-def controller():
+def controller_sturcture():
     dev = InputDevice("/dev/input/event4")
 
     BTN_X = 304
