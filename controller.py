@@ -35,3 +35,16 @@ for event in dev.read_loop():
             print("L2 pressed")
         elif event.code == BTN_R3:
             print("R3 pressed")
+
+        elif event.type == ecodes.EV_ABS:
+            if event.code == ecodes.ABS_HAT0Y:
+                if event.value == -1:
+                    print("D-pad up")
+                elif event.value == 1:
+                    print("D-pad down")
+
+            elif event.code == ecodes.ABS_HAT0X:
+                if event.value == -1:
+                    print("D-pad left")
+                elif event.value == 1:
+                    print("D-pad right")
