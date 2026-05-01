@@ -1,4 +1,5 @@
 from evdev import InputDevice, ecodes
+from motor import send_motors, forward, backwards, right, left, stop
 
 dev = InputDevice("/dev/input/event4")
 
@@ -19,14 +20,19 @@ for event in dev.read_loop():
     if event.type == ecodes.EV_KEY and event.value == 1:
         if event.code == BTN_X:
             print("X pressed")
+            backwards()
         elif event.code == BTN_CIRCLE:
             print("Circle pressed")
+            right()
         elif event.code == BTN_TRIANGLE:
             print("Triangle pressed")
+            forward()
         elif event.code == BTN_SQUARE:
             print("Square pressed")
+            left()
         elif event.code == BTN_R1:
             print("R1 pressed")
+            stop()
         elif event.code == BTN_R2:
             print("R2 pressed")
         elif event.code == BTN_L1:
