@@ -1,5 +1,7 @@
 from pyPS4Controller.controller import Controller
 
+print("Starting controller...")
+
 class MyController(Controller):
     def on_x_press(self):
         print("X pressed")
@@ -13,5 +15,7 @@ class MyController(Controller):
     def on_square_press(self):
         print("Square pressed")
 
-controller = MyController(interface="/dev/input/js0", connecting_using_ds4drv=False)
-controller.listen()
+controller = MyController(interface="/dev/input/event4", connecting_using_ds4drv=False)
+print("Listening...")
+controller.listen(timeout=60)
+print("Stopped")
