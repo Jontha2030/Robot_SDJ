@@ -55,4 +55,5 @@ def avoid_obstacles():
             stop()
             right()
         else:
+            print("You good, áfram!")
             forward()
