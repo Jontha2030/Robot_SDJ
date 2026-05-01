@@ -59,20 +59,20 @@ def avoid_obstacles():
             
             print("Vinstri:",distance_v," Hægri:",distance_h) #----Debug
             if 0 > distance_v < 30:
-                if current_state != "beygjav":
+                if current_state != "beygja":
                     print("STOP! Beygji til vinstri") #----Debug
                     stop()
                     time.sleep(0.01)
                     right()
-                    current_state = "beygjav"
+                    current_state = "beygja"
                     
             elif 0 > distance_h < 30:
-                if current_state != "beygjah":
+                if current_state != "beygja":
                     print("STOP! Beygji til hægri") #----Debug
                     stop()
                     time.sleep(0.01)
                     left()
-                    current_state = "beygjah"
+                    current_state = "beygja"
                 
             else:
                 if current_state != "afram":
