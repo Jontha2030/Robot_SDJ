@@ -6,7 +6,7 @@ from SRF02 import distance_scan
 import time
 from controller import controller_sturcture
 import threading
-import servo
+from servo import selfturning_servos, servo_init
 from __init__ import SRF02_data, lock
     
 
@@ -42,10 +42,13 @@ def speakers():
     speaker.play()
 
 def avoid_obstacles():
-    t = threading.Thread(target=distance_scan, daemon=True)
-    t.start()
+    SRF02thread = threading.Thread(target=distance_scan, daemon=True)
+    servothread = threading.Thread(target=selfturning_servos, daemon=True)
+    SRF02thread.start()
+    servothread.start()
     time.sleep(0.8)
-    servo.servo_init([0,1])
+    
+    servo_init([0,1])
 
     current_state = None
     try:
