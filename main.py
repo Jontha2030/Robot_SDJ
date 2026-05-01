@@ -41,3 +41,4 @@ def speakers():
     print("Bíllinn fer í gang!")
     speaker.play()
 
+call_controller()
