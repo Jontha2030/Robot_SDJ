@@ -21,6 +21,8 @@ def distance_scan():
         #print(distance_v) # ----Debug
         print("Vinstri:", distance_v," Hægri:", distance_h) # ----Debug
         if distance_v < 25:
-            print("Stop!!!")
+            print("Stop vinstri!!!")
+        elif distance_h < 25:
+            print("Stop hægri!!!")
 
 distance_scan()
