@@ -77,8 +77,13 @@ def avoid_obstacles():
                     print("You good, áfram!")
                     forward()
                     current_state = "afram"
+                    
     except Exception as e:
         print("Ehv. for úrskeiðis", e)
+        stop()
+        
+    except KeyboardInterrupt:
+        print("Forrit er hætt")
         stop()
 
 avoid_obstacles()
