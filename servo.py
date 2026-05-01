@@ -46,4 +46,5 @@ def testing_servos(servos):
 
     return 0
 
+servo_init(servos)
 testing_servos(servos)
