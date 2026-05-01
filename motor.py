@@ -20,12 +20,12 @@ def send_motors(m1, m2):
 
 #Seigir mótor að fara áfram
 def forward():
-    send_motors(150,-150)
+    send_motors(160,-150)
 
 
 #Seigir mótor að fara tilbaka
 def backwards():
-    send_motors(-150, 150)
+    send_motors(-160, 150)
 
 
 #Seigir mótor að fara til hægri
