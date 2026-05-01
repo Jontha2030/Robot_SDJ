@@ -44,6 +44,7 @@ def avoid_obstacles():
     t = threading.Thread(target=distance_scan, daemon=True)
     t.start()
     time.sleep(0.8)
+    servo.servo_init([0,1])
 
     current_state = None
     try:
