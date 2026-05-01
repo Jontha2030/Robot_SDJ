@@ -62,6 +62,7 @@ def avoid_obstacles():
                 if current_state != "beygjav":
                     print("STOP! Beygji til vinstri") #----Debug
                     stop()
+                    time.sleep(0.01)
                     right()
                     current_state = "beygjav"
                     
@@ -69,6 +70,7 @@ def avoid_obstacles():
                 if current_state != "beygjah":
                     print("STOP! Beygji til hægri") #----Debug
                     stop()
+                    time.sleep(0.01)
                     left()
                     current_state = "beygjah"
                 
