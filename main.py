@@ -2,7 +2,12 @@
 #import servo as servoMotors
 from motor import send_motors, forward, backwards, right, left, stop
 from speaker import Speaker
+from SRF02 import distance_scan
 import time
+import threading
+import servo
+from __init__ import SRF02_data, lock
+    
 
 def keyra_bil():
   while True:
@@ -35,3 +40,17 @@ def speakers():
     print("Bíllinn fer í gang!")
     speaker.play()
 
+def avoid_obstacles():
+    t = threading.Thread(target=distance_scan, daemon=True)
+    t.start()
+    
+    while True:
+        with lock:
+            distance_v = SRF02_data["left"]
+            distance_h = SRF02_data["right"]
+            
+        if distance_v > 0 and distance_v < 30 or distance_h > 0 and distance_h < 30:
+            stop()
+            right()
+        else:
+            forward()

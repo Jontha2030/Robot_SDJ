@@ -45,6 +45,3 @@ def testing_servos(servos):
         move_servo(servos[1],angle,speed)
 
     return 0
-
-servo_init(servos)
-testing_servos(servos)
