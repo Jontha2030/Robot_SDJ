@@ -6,6 +6,8 @@ def distance_scan():
     # (GPIO 2 og 3)
     i2c_addresses = [0x70, 0x71] # Listi yfir addressur á sensorum
     sample_count = 1
+    distance_h = 0
+    distance_v = 0
     while True:
         bus.write_byte_data(i2c_addresses[0], 0, 0x51) # Kveikji á vinstri skynjara
         time.sleep(0.07)
