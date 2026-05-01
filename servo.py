@@ -75,7 +75,6 @@ def selfturning_servos():
 
 
 
-selfturning_servos()
 
   
 
