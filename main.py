@@ -1,18 +1,37 @@
-import SRF02 as distanceSensors
-import servo as servoMotors
-
+#import SRF02 as distanceSensors
+#import servo as servoMotors
+from motor import send_motors, forward, backwards, right, left, stop
 from speaker import Speaker
 import time
 
-# Frumstilla speaker
-speaker = Speaker()
+def keyra_bil():
+  while True:
 
-# Þegar bíllinn fer í gang — spila lag
-print("Bíllinn fer í gang!")
-speaker.play()
+      tala = input()
 
-# ... afgangur af main loop ...
-# (bíllinn keyrir, gerir hluti, etc.)
+      if tala == 'w':
+          forward()
 
-# Til að stöðva (ef þarf):
-# speaker.stop()
+      elif tala == 's':
+          backwards()
+
+      elif tala == 'a':
+          left()
+
+      elif tala == 'd':
+          right()
+
+      elif tala == ' ':
+          stop()
+
+      elif tala == 'q':
+          stop()
+          break
+def speakers():
+    # Frumstilla speaker
+    speaker = Speaker()
+
+    # Þegar bíllinn fer í gang — spila lag
+    print("Bíllinn fer í gang!")
+    speaker.play()
+
