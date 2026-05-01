@@ -1,4 +1,4 @@
-1) su - newusername  (Rpi terminal)
+1) su - Jon  (Rpi terminal (búið að búa til user sem heitir Jon))
 2) ssh-keygen -t ed25519 -C "youremail@example.com"  (RPi terminal. Ýta á ENTER við öllum spurningum sem poppa upp)
 3) cat ~/.ssh/id_ed25519.pub   (RPi terminal. Copy'a allt í output'i á þessari skipun)
 4) Búa til nýjan SSH lykil á Github Settings með því sem var copy'að í skrefi 3)
