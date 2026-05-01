@@ -32,10 +32,10 @@ def distance_scan():
             low_v = bus.read_byte_data(i2c_addresses[1],3)
             distance_v += high_v * 256 + low_v
             print(distance_v) # ----Debug
-            sample_count += 1
         except Exception as e:
             print(f"Sensor error {hex(i2c_addresses[1])}: {e}")
 
+        sample_count += 1
         if sample_count != 0 and sample_count%10 == 0:
             with lock:
                 SRF02_data["left"] = distance_v/10

@@ -43,21 +43,32 @@ def speakers():
 def avoid_obstacles():
     t = threading.Thread(target=distance_scan, daemon=True)
     t.start()
+    time.sleep(0.8)
 
+    current_state = None
     try:
         while True:
             with lock:
                 distance_v = SRF02_data["left"]
                 distance_h = SRF02_data["right"]
                 
+            if distance_v is None or distance_h is None:
+                time.sleep(0.1)
+                continue
+            
             print("Vinstri:",distance_v," Hægri:",distance_h) #----Debug
-            if distance_v > 0 and distance_v < 30 or distance_h > 0 and distance_h < 30:
-                print("STOP! Beygji til hægri") #----Debug
-                stop()
-                right()
+            if 0 < distance_v < 30 or 0 < distance_h < 30:
+                if current_state != "beygja":
+                    print("STOP! Beygji til hægri") #----Debug
+                    stop()
+                    time.sleep(0.3)
+                    right()
+                    current_state = "beygja"
             else:
-                print("You good, áfram!")
-                forward()
+                if current_state != "afram":
+                    print("You good, áfram!")
+                    forward()
+                    current_state = "forward"
     except Exception as e:
         print("Ehv. for úrskeiðis", e)
         stop()
