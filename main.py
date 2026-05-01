@@ -67,6 +67,7 @@ def avoid_obstacles():
             else:
                 if current_state != "afram":
                     print("You good, áfram!")
+                    time.sleep(0.3)
                     forward()
                     current_state = "forward"
     except Exception as e:
