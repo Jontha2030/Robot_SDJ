@@ -6,8 +6,8 @@ import time
 from controller import controller_sturcture
 
 
-def call_controller():
-    controller_sturcture()
+
+
 
 
 def keyra_bil():
@@ -41,4 +41,4 @@ def speakers():
     print("Bíllinn fer í gang!")
     speaker.play()
 
-call_controller()
+controller_sturcture()
