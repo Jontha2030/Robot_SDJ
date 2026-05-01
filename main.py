@@ -4,6 +4,7 @@ from motor import send_motors, forward, backwards, right, left, stop
 from speaker import Speaker
 from SRF02 import distance_scan
 import time
+from controller import controller_sturcture
 import threading
 import servo
 from __init__ import SRF02_data, lock
@@ -88,4 +89,4 @@ def avoid_obstacles():
         print("Forrit er hætt")
         stop()
 
-avoid_obstacles()
+

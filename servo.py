@@ -45,3 +45,37 @@ def testing_servos(servos):
         move_servo(servos[1],angle,speed)
 
     return 0
+
+#testing_servos(servos)
+
+
+def selfturning_servos():
+    while True:
+
+        kit.servo[0].angle = 90
+        kit.servo[1].angle = 90
+        
+        time.sleep(0.01)
+
+        for angle in range(90, -10, -10):
+            kit.servo[0].angle = angle
+            kit.servo[1].angle = 90 + (90-angle)
+            time.sleep(0.1)
+            
+ 
+        kit.servo[0].angle = 0
+        kit.servo[1].angle = 180
+        time.sleep(0.01)
+
+        for angle in range(0, 100, 10):
+            kit.servo[0].angle = angle
+            kit.servo[1].angle = 90 + (90-angle)
+            time.sleep(0.1)
+        
+
+
+
+
+  
+
+
