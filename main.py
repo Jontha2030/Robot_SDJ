@@ -61,3 +61,5 @@ def avoid_obstacles():
     except Exception as e:
         print("Ehv. for úrskeiðis", e)
         stop()
+
+avoid_obstacles()
