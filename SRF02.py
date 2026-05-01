@@ -10,6 +10,8 @@ def distance_scan():
     sample_count = 1
     distance_h = 0
     distance_v = 0
+    SRF02_data["left"] = distance_v
+    SRF02_data["right"] = distance_h
     while True:
         # Logic fyrir hægri skynjara
         try:
