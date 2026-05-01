@@ -61,15 +61,13 @@ def avoid_obstacles():
                 if current_state != "beygja":
                     print("STOP! Beygji til hægri") #----Debug
                     stop()
-                    time.sleep(0.3)
                     right()
                     current_state = "beygja"
             else:
                 if current_state != "afram":
                     print("You good, áfram!")
-                    time.sleep(0.3)
                     forward()
-                    current_state = "forward"
+                    current_state = "afram"
     except Exception as e:
         print("Ehv. for úrskeiðis", e)
         stop()
