@@ -25,10 +25,10 @@ def distance_scan():
         sample_count += 1
         if sample_count%10 == 0:
             print("Vinstri:", distance_v/9," Hægri:", distance_h/9) # ----Debug
-        if sample_count%10 == 0 & distance_v/9 < 25:
+        if sample_count%10 == 0 and distance_v/9 < 25:
             print("Stop vinstri!!!")
             distance_v = 0
-        elif sample_count%10 == 0 & distance_h/9 < 25:
+        elif sample_count%10 == 0 and distance_h/9 < 25:
             print("Stop hægri!!!")
             distance_h = 0
 
