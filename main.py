@@ -60,3 +60,4 @@ def avoid_obstacles():
                 forward()
     except Exception as e:
         print("Ehv. for úrskeiðis", e)
+        stop()
