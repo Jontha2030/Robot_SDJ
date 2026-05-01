@@ -8,6 +8,7 @@ def distance_scan():
     # (GPIO 2 og 3)
     i2c_addresses = [0x70, 0x71] # Listi yfir addressur á sensorum
     sample_count = 0
+    n_samples = 1
     distance_h = 0
     distance_v = 0
     SRF02_data["left"] = distance_v
@@ -36,10 +37,10 @@ def distance_scan():
             print(f"Sensor error {hex(i2c_addresses[1])}: {e}")
 
         sample_count += 1
-        if sample_count != 0 and sample_count%10 == 0:
+        if sample_count != 0 and sample_count%n_samples == 0:
             with lock:
-                SRF02_data["left"] = distance_v/10
-                SRF02_data["right"] = distance_h/10
+                SRF02_data["left"] = distance_v/n_samples
+                SRF02_data["right"] = distance_h/n_samples
             distance_v = 0
             distance_h = 0
             sample_count = 0
