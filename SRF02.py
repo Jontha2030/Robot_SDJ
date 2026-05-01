@@ -20,7 +20,7 @@ def distance_scan():
             high_h = bus.read_byte_data(i2c_addresses[0],2) # Mikilvægari hluti merkis sem kemur útkomu upp að "tuginum" eins og 4*10 í 45
             low_h  = bus.read_byte_data(i2c_addresses[0],3) # Einingarnar í útkomutöluni, eins og 5 í 45
             distance_h += high_h * 256 + low_h # Virkar eins og 4*10 + 2, þar sem high er 4 margf. m. 10 og low er 2, eða, einingarnar (nota 256 af því er með 8-bytes, 2^8 = 256)
-            print(distance_h) # ----Debug
+            #print(distance_h) # ----Debug
         except Exception as e:
             print(f"Sensor error {hex(i2c_addresses[0])}: {e}")
 
@@ -31,7 +31,7 @@ def distance_scan():
             high_v = bus.read_byte_data(i2c_addresses[1],2)
             low_v = bus.read_byte_data(i2c_addresses[1],3)
             distance_v += high_v * 256 + low_v
-            print(distance_v) # ----Debug
+            #print(distance_v) # ----Debug
         except Exception as e:
             print(f"Sensor error {hex(i2c_addresses[1])}: {e}")
 
