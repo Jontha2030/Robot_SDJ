@@ -70,8 +70,6 @@ def selfturning_servos():
         time.sleep(0.2)
 
 
-        
-est
 selfturning_servos()
 
   
