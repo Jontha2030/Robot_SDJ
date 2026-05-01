@@ -41,3 +41,5 @@ def left():
 #Seigir mótor að stoppa
 def stop():
     send_motors(0, 0)
+
+stop()
