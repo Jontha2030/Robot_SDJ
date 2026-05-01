@@ -64,7 +64,7 @@ def selfturning_servos():
             
 
         time.sleep(0.2)   
-        for angle in range(0, 100, 10):
+        for angle in range(kit.servo[0].angle, 100, 10):
             print(kit.servo[0].angle)
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
