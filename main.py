@@ -49,7 +49,9 @@ def avoid_obstacles():
             distance_v = SRF02_data["left"]
             distance_h = SRF02_data["right"]
             
+        print("Vinstri:",distance_v," Hægri:",distance_h) #----Debug
         if distance_v > 0 and distance_v < 30 or distance_h > 0 and distance_h < 30:
+            print("STOP! Beygji til hægri") #----Debug
             stop()
             right()
         else:
