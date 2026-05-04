@@ -20,7 +20,7 @@ Síðan er hægt að hlaða inn öllum pökkunum með pip:
 pip install smbus
 pip install evdev
 pip install pygame
-pip install adafruit_servokit
+pip install adafruit_circuitpython_servokit
 ```
 
 Þá ætti að vera hægt að keyra alla kóðana hérna.
