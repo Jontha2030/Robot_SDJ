@@ -15,40 +15,6 @@ def servo_init(servos):
         kit.servo[servo_nr].angle = 90
 
 
-# Fall sem snýr völdum servo mótor, valinn snúning
-def move_servo(servo_nr, target_angle, speed=1):
-    start_angle = kit.servo[servo_nr].angle # Sækji upphafsstöðu
-    #print("Start angle:", start_angle) #----DEBUG
-    #print("Target angle:", target_angle) #----DEBUG
-    step = speed if start_angle < target_angle else -speed # Athugar hvort hann eigi að snúa til hægri eða vinstri
-    #print("Step size:", step) #----DEBUG
-    for angle in range(int(start_angle), int(target_angle), int(step)):
-        #print(angle) #----DEBUG
-        kit.servo[servo_nr].angle = angle
-        time.sleep(0.02)
-
-
-    return 0
-
-
-def move_servos():
-
-
-    return 0
-
-
-def testing_servos(servos):
-    #servo_init(servos)
-    while True:
-        angle = int(input("Angle(0-180):"))
-        speed = int(input("Speed(<10?):"))
-        move_servo(servos[1],angle,speed)
-
-    return 0
-
-#testing_servos(servos)
-
-
 def selfturning_servos():
     while True:
 
@@ -57,20 +23,20 @@ def selfturning_servos():
         
         time.sleep(0.01)
 
-        for angle in range(90, -10, -10):
+        for angle in range(120, -10, -30):
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
-            time.sleep(0.1)
+            time.sleep(0.05)
             
  
         kit.servo[0].angle = 0
         kit.servo[1].angle = 180
         time.sleep(0.01)
 
-        for angle in range(0, 100, 10):
+        for angle in range(0, 130, 30):
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
-            time.sleep(0.1)
+            time.sleep(0.05)
         
 
 
