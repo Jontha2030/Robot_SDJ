@@ -18,6 +18,7 @@ def servo_init(servos):
 
 #Fall sem lætur servos snúa sjálfkrafa
 def selfturning_servos():
+    servo_init(servos)
     while True:
         with lock:
             button_state = Button_Press["state"]
