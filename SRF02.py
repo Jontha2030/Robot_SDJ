@@ -9,7 +9,6 @@ from __init__ import lock, SRF02_data # Þetta er threads
 # Fjarlægðin er skrifuð inná þráð (thread) sem main.py skjalið vinnur síðan úr
 
 # ---------- GLOBAL BREYTUR ------------
-SAMPLE_COUNT = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
 N_SAMPLES = 1 # Hægt að velja hve mörgum mælingum á að safna
 I2C_ADDRESSES = [0X70, 0X71] # Listi yfir addressur á sensorum (fundið með i2cdetect -y 1, en þeir þurfa þá væntanlega að vera tengdir)
 
@@ -18,6 +17,7 @@ def distance_scan():
     bus = SMBus(1) # Þetta notar physical SDA og SCL pinnana á PI. allt með bus héðan frá er að nota smbus pakkann
     distance_h = 0
     distance_v = 0
+    sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
     # Hér eru þráða breyturnar, en þær geyma mælda fjarlægð skynjara
     SRF02_data["left"] = distance_v
     SRF02_data["right"] = distance_h
@@ -44,14 +44,14 @@ def distance_scan():
         except Exception as e:
             print(f"Sensor error {hex(I2C_ADDRESSES[1])}: {e}")
 
-        SAMPLE_COUNT += 1
-        if SAMPLE_COUNT != 0 and SAMPLE_COUNT%N_SAMPLES == 0: # Þetta lætur "distance" breyturnar safna nokkrum mælingum upp að völdum fjölda, og skilar síðan meðaltali
+        sample_count += 1
+        if sample_count != 0 and sample_count%N_SAMPLES == 0: # Þetta lætur "distance" breyturnar safna nokkrum mælingum upp að völdum fjölda, og skilar síðan meðaltali
             with lock:
                 SRF02_data["left"] = distance_v/N_SAMPLES
                 SRF02_data["right"] = distance_h/N_SAMPLES
             distance_v = 0
             distance_h = 0
-            SAMPLE_COUNT = 0
+            sample_count = 0
         else:
             pass
             
