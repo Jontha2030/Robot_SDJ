@@ -1,6 +1,8 @@
 from evdev import InputDevice, ecodes
 from motor import send_motors, forward, backwards, right, left, stop
 
+
+speed = 200
 #Fall fyrir controller
 def controller_sturcture():
     dev = InputDevice("/dev/input/event4")
@@ -24,13 +26,13 @@ def controller_sturcture():
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY and event.value == 1:
             if event.code == BTN_X:
-                backwards(100)
+                backwards(speed)
             elif event.code == BTN_CIRCLE:
-                right(100, False)
+                right(speed, False)
             elif event.code == BTN_TRIANGLE:
-                forward(100)
+                forward(speed)
             elif event.code == BTN_SQUARE:
-                left(100, False)
+                left(speed, False)
             elif event.code == BTN_R1:
                 stop()
             elif event.code == BTN_R2:
