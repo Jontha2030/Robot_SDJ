@@ -35,7 +35,7 @@ def backwards(speed):
 
 
 #Seigir mótor að fara til hægri
-def right(speed, hard_turn):
+def right(speed, hard_turn=False):
     speed = check_speed(speed)
     if hard_turn:
         send_motors(speed,speed)
@@ -44,7 +44,7 @@ def right(speed, hard_turn):
 
 
 #Seigir mótor að fara til vinstri
-def left(speed, hard_turn):
+def left(speed, hard_turn=False):
     speed = check_speed(speed)
     if hard_turn:
         send_motors(-speed,-speed)
