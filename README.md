@@ -23,5 +23,24 @@ pip install pygame
 pip install adafruit_circuitpython_servokit
 ```
 
+Síðan, til þess að tengjast fjarstýringu, þarf að nota bluetoothctl:
+```bash
+bluetoothctl
+```
+```bash
+power on
+agent on
+default-agent
+scan on
+```
+Síðan er ehv. veginn fundið addressuna á controller'num og gert
+```bash
+pair "Address'a"
+connect "Address'a"
+trust "Address'a"
+quit
+```
+
+
 Þá ætti að vera hægt að keyra alla kóðana hérna.
 (Muna bara alltaf að "activate'a" þegar maður opnar tölvuna aftur)
