@@ -27,8 +27,11 @@ Síðan, til þess að tengjast fjarstýringu, þarf að nota bluetoothctl:
 ```bash
 bluetoothctl
 ```
+<<<<<<< HEAD
 Þá keyrist umhverfi sem byrtir fullt af tölum en þar er einnig hægt að keyra skipanir.
 Keyrið eftirfarandi:
+=======
+>>>>>>> 0f79371 (Update README with Bluetooth connection instructions)
 ```bash
 power on
 agent on
