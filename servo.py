@@ -15,24 +15,30 @@ def servo_init(servos):
         kit.servo[servo_nr].angle = 90
 
 
+#Fall sem lætur servos snúa sjálfkrafa
 def selfturning_servos():
     while True:
 
+        #Lætur þá snúa beint áfram
         kit.servo[0].angle = 90
         kit.servo[1].angle = 90
         
         time.sleep(0.01)
-
+        
+        #For lykkja sem lætur þá snúa sér út
         for angle in range(120, -10, -30):
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
             time.sleep(0.05)
             
- 
+        
+        #lætur þá snúa út
         kit.servo[0].angle = 0
         kit.servo[1].angle = 180
         time.sleep(0.01)
+        
 
+        #For lykkja sem lætur þá snúa sér inn
         for angle in range(0, 130, 30):
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
