@@ -1,5 +1,6 @@
 from evdev import InputDevice, ecodes
 from motor import forward, backwards, right, left, stop
+from play import play_random, stop_playing
 from __init__ import Button_Press
 import avoid_obstacles
 
