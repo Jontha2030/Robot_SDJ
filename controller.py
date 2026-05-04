@@ -1,6 +1,6 @@
 from evdev import InputDevice, ecodes
 from motor import send_motors, forward, backwards, right, left, stop
-from play import play_random, get_songs, start_playing
+from play import play_random, get_songs, start_playing, stop_playing
 
 speed = 200
 #Fall fyrir controller
@@ -55,6 +55,7 @@ def controller_sturcture():
 
             elif event.code == ecodes.ABS_HAT0X:
                 if event.value == -1:
+                    stop_playing()
                     print("D-pad left")
                 elif event.value == 1:
                     play_random()
