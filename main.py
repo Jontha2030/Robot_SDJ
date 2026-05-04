@@ -61,22 +61,6 @@ def controller_sturcture():
                     print("D-pad left")
                 elif event.value == 1:
                     print("D-pad right")
-                    
-                    
-<<<<<<< HEAD
+
 if __name__ == "__main__":
     controller_sturcture()
-        
-=======
-    # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum
-    except Exception as keyrsluError:
-        print("Ehv. for úrskeiðis", keyrsluError)
-        stop()
-        
-    except KeyboardInterrupt:
-        print("Notandi slökkti á forriti")
-        stop()
-
-
-avoid_obstacles()
->>>>>>> 3302831 (aðlögun)
