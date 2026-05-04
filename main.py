@@ -1,7 +1,7 @@
 from evdev import InputDevice, ecodes
 from motor import forward, backwards, right, left, stop
 from __init__ import Button_Press
-from avoid_obstacles import avoid_obstacles
+import avoid_obstacles
 
 #Fall fyrir controller
 def controller_sturcture():
@@ -40,7 +40,7 @@ def controller_sturcture():
             elif event.code == BTN_L1:
                 print("L1 pressed")
                 print("Entering AUTO-MODE")
-                avoid_obstacles()
+                avoid_obstacles.avoid_obstacles()
             elif event.code == BTN_L2:
                 print("L2 pressed")
                 Button_Press["state"] = True
