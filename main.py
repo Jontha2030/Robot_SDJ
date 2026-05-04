@@ -15,7 +15,7 @@ UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
 TURNING_SPEED = 200 # Hraði mótora í beygju
 FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
 REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
-AVOID_TIMES = 0.04 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
+AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
 SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka eitt sveim
 
 
