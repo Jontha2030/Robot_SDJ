@@ -15,6 +15,7 @@ I2C_ADDRESSES = [0X70, 0X71] # Listi yfir addressur á sensorum (fundið með i2
 
 def distance_scan():
     bus = SMBus(1) # Þetta notar physical SDA og SCL pinnana á PI. allt með bus héðan frá er að nota smbus pakkann
+    sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
     distance_h = 0
     distance_v = 0
     sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
@@ -55,3 +56,7 @@ def distance_scan():
         else:
             pass
             
+
+if __name__ == "__main__":
+    distance_scan()
+        

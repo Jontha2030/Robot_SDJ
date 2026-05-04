@@ -1,18 +1,12 @@
-#import SRF02 as distanceSensors
-#import servo as servoMotors
-from motor import send_motors, forward, backwards, right, left, stop
+from motor import forward, backwards, right, left, stop
 from speaker import Speaker
 from SRF02 import distance_scan
+from main import controller_sturcture
 import time
 import threading
 from servo import selfturning_servos, servo_init
-from __init__ import SRF02_data, lock
-    
-# ---------LÝSING---------------
-# Þetta er kóðin sem dregur öll föllin saman í "X" forrit.
-# 1) - conttroller - Keyrir bílinn með fjarstýringu án þess að vera með ehv. árekstrar vörn
-# 2) - avoid_obstacles - Bíllinn keyrir alveg sjálfur og forðast hindranir 
-    
+from __init__ import SRF02_data, Button_Press, lock
+
 # ---------Global breytur------------
 UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
 TURNING_SPEED = 200 # Hraði mótora í beygju
@@ -21,14 +15,15 @@ REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
 AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
 SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 
-
 def avoid_obstacles():
     # Bý til tvo threads þar sem að eftirfarandi tveir hlutir keyra  með while loopum
     try:
         SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Einn fyrir SRF02 fjarlægðarskynjarann
         servothread = threading.Thread(target=selfturning_servos, daemon=True) # Einna fyrir servoana
+        controllerthread = threading.Thread(target=controller_sturcture, daemon=True) # Einn fyrir servo'ana
         SRF02thread.start()
         servothread.start()
+        controllerthread.start()
         time.sleep(0.8)
     
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
@@ -47,6 +42,12 @@ def avoid_obstacles():
                 # Hér eru thread breyturnar tengdar fjarlægðarskynjaranum en þær geyma mælda fjarlægð
                 distance_v = SRF02_data["left"] 
                 distance_h = SRF02_data["right"]
+                button_status = Button_Press["state"]
+            
+            if button_status:
+                Button_Press["state"] = False
+                print("Exiting AUTO-MODE")
+                break
                 
             if distance_v is None or distance_h is None: # Þetta er til þess að forrit chrash'ar ekki í fyrstu umferð, en þá skilar SFR02 forritið studnum None
                 time.sleep(0.1)
@@ -92,5 +93,7 @@ def avoid_obstacles():
     except KeyboardInterrupt:
         print("Notandi slökkti á forriti")
         stop()
-
-
+        
+        
+if __name__ == "__main__":
+    avoid_obstacles()
