@@ -24,7 +24,7 @@ def selfturning_servos():
             button_state = Button_Press["state"]
             
         if button_state:
-            print("Turning of servos")
+            print("Slekk á servo'um")
             break
 
         #Lætur þá snúa beint áfram
