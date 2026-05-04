@@ -4,7 +4,6 @@ from motor import send_motors, forward, backwards, right, left, stop
 from speaker import Speaker
 from SRF02 import distance_scan
 import time
-from controller import controller_sturcture
 import threading
 from servo import selfturning_servos, servo_init
 from __init__ import SRF02_data, lock
