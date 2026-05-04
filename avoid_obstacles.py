@@ -17,11 +17,9 @@ SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 
 def avoid_obstacles():
     # Bý til tvo threads þar sem að eftirfarandi tveir hlutir keyra  með while loopum
-    try:
-        SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Einn fyrir SRF02 fjarlægðarskynjarann
+    try:        
         servothread = threading.Thread(target=selfturning_servos, daemon=True) # Einna fyrir servoana
         controllerthread = threading.Thread(target=controller_sturcture, daemon=True) # Einn fyrir servo'ana
-        SRF02thread.start()
         servothread.start()
         controllerthread.start()
         time.sleep(0.8)

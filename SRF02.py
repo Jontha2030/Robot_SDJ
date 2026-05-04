@@ -24,13 +24,6 @@ def distance_scan():
     SRF02_data["right"] = distance_h
     while True:
         # Logic fyrir hægri skynjara
-        with lock:
-            button_state = Button_Press["state"]
-            
-        if button_state:
-            print("Slekk á SRF02 skynjurum")
-            break
-        
         try:
             bus.write_byte_data(I2C_ADDRESSES[0], 0, 0x51) # Kveikji á vinstri skynjara
             time.sleep(0.07)
@@ -62,8 +55,6 @@ def distance_scan():
             sample_count = 0
         else:
             pass
-    bus.close()
-    time.sleep(0.2)
         
 if __name__ == "__main__":
     distance_scan()
