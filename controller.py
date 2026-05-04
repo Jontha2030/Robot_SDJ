@@ -1,6 +1,7 @@
 from evdev import InputDevice, ecodes
 from motor import send_motors, forward, backwards, right, left, stop
 from play import play_random, get_songs, start_playing, stop_playing
+from main import avoid_obstacles
 
 speed = 200
 #Fall fyrir controller
@@ -38,6 +39,7 @@ def controller_sturcture():
             elif event.code == BTN_R2:
                 print("R2 pressed")
             elif event.code == BTN_L1:
+                avoid_obstacles()
                 print("L1 pressed")
             elif event.code == BTN_L2:
                 print("L2 pressed")
