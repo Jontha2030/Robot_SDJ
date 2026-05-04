@@ -3,6 +3,7 @@ from motor import forward, backwards, right, left, stop
 from play import play_random, stop_playing
 from SRF02 import distance_scan
 from __init__ import Button_Press
+import threading
 import avoid_obstacles
 
 speed = 200

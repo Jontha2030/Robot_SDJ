@@ -1,6 +1,6 @@
 import time
 from smbus import SMBus # Þetta er pakkinn sem sér um fjarlægðarskynjarana
-from __init__ import lock, SRF02_data, Button_Press, First_SRF02_run # Þetta er threads
+from __init__ import lock, SRF02_data, Button_Press # Þetta er threads
 
 # ------------ LÝSING -----------------
 # Þetta skjal er bara fall sem sér um að nota fjarlægðarskynjarana (SRF02).
