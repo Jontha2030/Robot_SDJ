@@ -61,3 +61,6 @@ def controller_sturcture():
                     print("D-pad right")
 
 
+controller_sturcture()
+
+
