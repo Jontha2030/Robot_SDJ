@@ -3,6 +3,7 @@ from motor import forward, backwards, right, left, stop
 from __init__ import Button_Press
 import avoid_obstacles
 
+speed = 200
 #Fall fyrir controller
 def controller_sturcture():
     dev = InputDevice("/dev/input/event4")
@@ -26,13 +27,13 @@ def controller_sturcture():
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY and event.value == 1:
             if event.code == BTN_X:
-                backwards()
+                backwards(speed)
             elif event.code == BTN_CIRCLE:
-                right()
+                right(speed)
             elif event.code == BTN_TRIANGLE:
-                forward()
+                forward(speed)
             elif event.code == BTN_SQUARE:
-                left()
+                left(speed)
             elif event.code == BTN_R1:
                 stop()
             elif event.code == BTN_R2:
