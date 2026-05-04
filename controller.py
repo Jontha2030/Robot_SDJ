@@ -32,7 +32,7 @@ def controller_sturcture():
             elif event.code == BTN_SQUARE:
                 left(100)
             elif event.code == BTN_R1:
-                stop(100)
+                stop()
             elif event.code == BTN_R2:
                 print("R2 pressed")
             elif event.code == BTN_L1:
