@@ -40,6 +40,7 @@ def controller_sturcture():
             elif event.code == BTN_R2:
                 print("R2 pressed")
             elif event.code == BTN_L1:
+                Button_Press["state"] = False
                 print("L1 pressed")
                 print("Entering AUTO-MODE")
                 avoid_obstacles.avoid_obstacles()
