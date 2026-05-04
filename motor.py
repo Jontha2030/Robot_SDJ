@@ -38,7 +38,7 @@ def backwards(speed):
 def right(speed, hard_turn):
     speed = check_speed(speed)
     if hard_turn:
-        send_motors(speed,speed)
+        send_motors(speed + 15,speed)
     else:
         send_motors(speed, 0)
 
@@ -47,7 +47,7 @@ def right(speed, hard_turn):
 def left(speed, hard_turn):
     speed = check_speed(speed)
     if hard_turn:
-        send_motors(-speed,-speed)
+        send_motors(-(speed + 15),-speed)
     else:
         send_motors(0, -speed)
         
