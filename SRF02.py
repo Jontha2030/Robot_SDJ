@@ -55,7 +55,8 @@ def distance_scan():
             sample_count = 0
         else:
             pass
-            
+    
+    print("Fór alveg út")
 
 if __name__ == "__main__":
     distance_scan()

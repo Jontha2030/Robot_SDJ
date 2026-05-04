@@ -48,8 +48,6 @@ def controller_sturcture():
                 elif event.code == BTN_L2:
                     print("L2 pressed")
                     Button_Press["state"] = True
-                    SRF02_data["left"] = None
-                    SRF02_data["right"] = None
                     stop()
                 elif event.code == BTN_R3:
                     print("R3 pressed")
