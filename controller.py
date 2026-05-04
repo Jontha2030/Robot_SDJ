@@ -28,11 +28,11 @@ def controller_sturcture():
             if event.code == BTN_X:
                 backwards(speed)
             elif event.code == BTN_CIRCLE:
-                right(speed, False)
+                right(speed)
             elif event.code == BTN_TRIANGLE:
                 forward(speed)
             elif event.code == BTN_SQUARE:
-                left(speed, False)
+                left(speed)
             elif event.code == BTN_R1:
                 stop()
             elif event.code == BTN_R2:
