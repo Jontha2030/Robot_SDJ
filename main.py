@@ -1,10 +1,15 @@
 from evdev import InputDevice, ecodes
 from motor import forward, backwards, right, left, stop
 from play import play_random, stop_playing
+from SRF02 import distance_scan
 from __init__ import Button_Press
 import avoid_obstacles
 
 speed = 200
+def initialize_components():
+    SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Búum til þráð fyrir fjarlægðarskynjarana sem keyrir alltaf
+    SRF02thread.start()
+
 #Fall fyrir controller
 def controller_sturcture():
     try:
@@ -77,4 +82,5 @@ def controller_sturcture():
                         
 
 if __name__ == "__main__":
+    initialize_components()
     controller_sturcture()
