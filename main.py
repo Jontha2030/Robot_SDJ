@@ -11,7 +11,13 @@ from __init__ import SRF02_data, lock
     
     
 # ---------Global breytur------------
-EFRIMÖRK = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
+UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
+TURNING_SPEED = 200 # Hraði mótora í beygju
+FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
+REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
+AVOID_TIMES = 0.04 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
+SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka eitt sveim
+
 
 def keyra_bil():
   while True:
@@ -54,6 +60,9 @@ def avoid_obstacles():
         time.sleep(0.8)
     
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
+        
+        speakers() # Spila lag
+        
     except Exception as InitError:
         print("Einhvað fór úrsskeiðis við virkjun: ", InitError)
     
@@ -71,28 +80,34 @@ def avoid_obstacles():
             
             #print("Vinstri:",distance_v," Hægri:",distance_h) #----Debug
             # Hér kemur logic'ið til þess að forðast hluti (valdar fjarlægðir fundust með að prufa)
-            if 1 < distance_v < EFRIMÖRK: # Athugar hvort vinstri skynjari sé innan marka 
+            if 1 < distance_v < UPPER_BOUNDS: # Athugar hvort vinstri skynjari sé innan marka 
                 if current_state != "beygja":
                     #print("STOP! Beygji til vinstri") #----Debug
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    right()
+                    backwards(REVERSE_SPEED)
+                    time.sleep(AVOID_TIMES)
+                    right(TURNING_SPEED)
+                    time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                     
-            elif 1 < distance_h < EFRIMÖRK: # Athugar hvort hægri skynjari sé innan marka
+            elif 1 < distance_h < UPPER_BOUNDS: # Athugar hvort hægri skynjari sé innan marka
                 if current_state != "beygja":
                     #print("STOP! Beygji til hægri") #----Debug
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    left()
+                    backwards(REVERSE_SPEED)
+                    time.sleep(AVOID_TIMES)
+                    left(TURNING_SPEED)
+                    time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                 
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
                 if current_state != "afram":
                     #print("You good, áfram!") #----Debug
-                    forward()
+                    forward(FORWARD_SPEED)
                     current_state = "afram"
                     
     # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum
