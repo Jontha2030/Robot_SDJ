@@ -9,6 +9,10 @@ import threading
 from servo import selfturning_servos, servo_init
 from __init__ import SRF02_data, lock
     
+# ---------LÝSING---------------
+# Þetta er kóðin sem dregur öll föllin saman í "X" forrit.
+# 1) - conttroller - Keyrir bílinn með fjarstýringu án þess að vera með ehv. árekstrar vörn
+# 2) - avoid_obstacles - Bíllinn keyrir alveg sjálfur og forðast hindranir 
     
 # ---------Global breytur------------
 UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
@@ -16,7 +20,7 @@ TURNING_SPEED = 200 # Hraði mótora í beygju
 FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
 REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
 AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
-SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka eitt sveim
+SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 
 
 def keyra_bil():
@@ -42,13 +46,6 @@ def keyra_bil():
       elif tala == 'q':
           stop()
           break
-def speakers():
-    # Frumstilla speaker
-    speaker = Speaker()
-
-    # Þegar bíllinn fer í gang — spila lag
-    print("Bíllinn fer í gang!")
-    speaker.play()
 
 def avoid_obstacles():
     # Bý til tvo threads þar sem að eftirfarandi tveir hlutir keyra  með while loopum
@@ -61,7 +58,9 @@ def avoid_obstacles():
     
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
         
-        speakers() # Spila lag
+        # Spilar lag
+        speaker = Speaker()
+        speaker.play()
         
     except Exception as InitError:
         print("Einhvað fór úrsskeiðis við virkjun: ", InitError)
