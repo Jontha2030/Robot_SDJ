@@ -13,9 +13,7 @@ N_SAMPLES = 1 # Hægt að velja hve mörgum mælingum á að safna
 I2C_ADDRESSES = [0X70, 0X71] # Listi yfir addressur á sensorum (fundið með i2cdetect -y 1, en þeir þurfa þá væntanlega að vera tengdir)
 
 def distance_scan():
-    if First_SRF02_run["state"]:
-        First_SRF02_run["state"] = False
-        bus = SMBus(1) # Þetta notar physical SDA og SCL pinnana á PI. allt með bus héðan frá er að nota smbus pakkann
+    bus = SMBus(1) # Þetta notar physical SDA og SCL pinnana á PI. allt með bus héðan frá er að nota smbus pakkann
 
     sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
     distance_h = 0
@@ -64,7 +62,8 @@ def distance_scan():
             sample_count = 0
         else:
             pass
-
+    bus.close()
+    time.sleep(0.2)
         
 if __name__ == "__main__":
     distance_scan()
