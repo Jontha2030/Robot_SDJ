@@ -18,6 +18,7 @@ def distance_scan():
     sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
     distance_h = 0
     distance_v = 0
+    sample_count = 0 # Til þess að telja hver margar mælingar hafa verið teknar í viðkomandi umferð (ef safnað er fleirum en einni)
     # Hér eru þráða breyturnar, en þær geyma mælda fjarlægð skynjara
     SRF02_data["left"] = distance_v
     SRF02_data["right"] = distance_h
@@ -44,14 +45,14 @@ def distance_scan():
         except Exception as e:
             print(f"Sensor error {hex(I2C_ADDRESSES[1])}: {e}")
 
-        SAMPLE_COUNT += 1
-        if SAMPLE_COUNT != 0 and SAMPLE_COUNT%N_SAMPLES == 0: # Þetta lætur "distance" breyturnar safna nokkrum mælingum upp að völdum fjölda, og skilar síðan meðaltali
+        sample_count += 1
+        if sample_count != 0 and sample_count%N_SAMPLES == 0: # Þetta lætur "distance" breyturnar safna nokkrum mælingum upp að völdum fjölda, og skilar síðan meðaltali
             with lock:
                 SRF02_data["left"] = distance_v/N_SAMPLES
                 SRF02_data["right"] = distance_h/N_SAMPLES
             distance_v = 0
             distance_h = 0
-            SAMPLE_COUNT = 0
+            sample_count = 0
         else:
             pass
             

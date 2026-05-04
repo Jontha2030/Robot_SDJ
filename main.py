@@ -59,9 +59,12 @@ def controller_sturcture():
 
             elif event.code == ecodes.ABS_HAT0X:
                 if event.value == -1:
+                    stop_playing()
                     print("D-pad left")
                 elif event.value == 1:
+                    play_random()
                     print("D-pad right")
+                    
 
 if __name__ == "__main__":
     controller_sturcture()
