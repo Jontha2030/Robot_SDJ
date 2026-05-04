@@ -1,6 +1,3 @@
-from speaker import Speaker
-import SRF02
-import time
 import threading
 import servo
 
