@@ -88,7 +88,7 @@ def avoid_obstacles():
                     time.sleep(0.01)
                     backwards(REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    right(TURNING_SPEED)
+                    right(TURNING_SPEED, True)
                     time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                     
@@ -100,7 +100,7 @@ def avoid_obstacles():
                     time.sleep(0.01)
                     backwards(REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    left(TURNING_SPEED)
+                    left(TURNING_SPEED, True)
                     time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                 
