@@ -24,15 +24,15 @@ def controller_sturcture():
     for event in dev.read_loop():
         if event.type == ecodes.EV_KEY and event.value == 1:
             if event.code == BTN_X:
-                backwards()
+                backwards(100)
             elif event.code == BTN_CIRCLE:
-                right()
+                right(100)
             elif event.code == BTN_TRIANGLE:
-                forward()
+                forward(100)
             elif event.code == BTN_SQUARE:
-                left()
+                left(100)
             elif event.code == BTN_R1:
-                stop()
+                stop(100)
             elif event.code == BTN_R2:
                 print("R2 pressed")
             elif event.code == BTN_L1:
