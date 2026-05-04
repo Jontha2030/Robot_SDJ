@@ -1,120 +1,69 @@
-#import SRF02 as distanceSensors
-#import servo as servoMotors
+from evdev import InputDevice, ecodes
 from motor import send_motors, forward, backwards, right, left, stop
-from speaker import Speaker
-from SRF02 import distance_scan
-import time
-import threading
-from servo import selfturning_servos, servo_init
-from __init__ import SRF02_data, lock
-    
-# ---------LÝSING---------------
-# Þetta er kóðin sem dregur öll föllin saman í "X" forrit.
-# 1) - conttroller - Keyrir bílinn með fjarstýringu án þess að vera með ehv. árekstrar vörn
-# 2) - avoid_obstacles - Bíllinn keyrir alveg sjálfur og forðast hindranir 
-    
-# ---------Global breytur------------
-UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
-TURNING_SPEED = 200 # Hraði mótora í beygju
-FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
-REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
-AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
-SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
+from play import play_random, get_songs, start_playing, stop_playing
+from avoid_obstacles import avoid_obstacles
+
+speed = 200
+#Fall fyrir controller
+def controller_sturcture():
+    dev = InputDevice("/dev/input/event4")
+
+    #Skillgreini takka
+    BTN_X = 304
+    BTN_CIRCLE = 305
+    BTN_TRIANGLE = 307
+    BTN_SQUARE = 308
+
+    BTN_L1 = 310
+    BTN_R1 = 311
+    BTN_L2 = 312
+    BTN_R2 = 313
+    BTN_R3 = 318
+
+    print("Controller ready")
 
 
-def keyra_bil():
-  while True:
+    #Ef ýtt er á taka þá gerist eitthvað
+    for event in dev.read_loop():
+        if event.type == ecodes.EV_KEY and event.value == 1:
+            if event.code == BTN_X:
+                backwards(speed)
+            elif event.code == BTN_CIRCLE:
+                right(speed)
+            elif event.code == BTN_TRIANGLE:
+                forward(speed)
+            elif event.code == BTN_SQUARE:
+                left(speed)
+            elif event.code == BTN_R1:
+                stop()
+            elif event.code == BTN_R2:
+                print("R2 pressed")
+            elif event.code == BTN_L1:
+                avoid_obstacles() 
+                print("L1 pressed")
+            elif event.code == BTN_L2:
+                print("L2 pressed")
+            elif event.code == BTN_R3:
+                print("R3 pressed")
 
-      tala = input()
 
-      if tala == 'w':
-          forward()
+        #Þetta er fyrir D-pad
+        elif event.type == ecodes.EV_ABS:
+            if event.code == ecodes.ABS_HAT0Y:
+                if event.value == -1:
+                    print("D-pad up")
+                elif event.value == 1:
+                    print("D-pad down")
 
-      elif tala == 's':
-          backwards()
+            elif event.code == ecodes.ABS_HAT0X:
+                if event.value == -1:
+                    stop_playing()
+                    print("D-pad left")
+                elif event.value == 1:
+                    play_random()
+                    print("D-pad right")
 
-      elif tala == 'a':
-          left()
 
-      elif tala == 'd':
-          right()
-
-      elif tala == ' ':
-          stop()
-
-      elif tala == 'q':
-          stop()
-          break
-
-def avoid_obstacles():
-    # Bý til tvo threads þar sem að eftirfarandi tveir hlutir keyra  með while loopum
-    try:
-        SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Einn fyrir SRF02 fjarlægðarskynjarann
-        servothread = threading.Thread(target=selfturning_servos, daemon=True) # Einna fyrir servoana
-        SRF02thread.start()
-        servothread.start()
-        time.sleep(0.8)
-    
-        servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
-        
-        # Spilar lag
-        speaker = Speaker()
-        speaker.play()
-        
-    except Exception as InitError:
-        print("Einhvað fór úrsskeiðis við virkjun: ", InitError)
-    
-    current_state = None # Nota þessa breytu til þess að þurfa ekki að senda boð á Motorcontroller'a aftur og aftur
-    try:
-        while True:
-            with lock: # Lock er tengt threads
-                # Hér eru thread breyturnar tengdar fjarlægðarskynjaranum en þær geyma mælda fjarlægð
-                distance_v = SRF02_data["left"] 
-                distance_h = SRF02_data["right"]
-                
-            if distance_v is None or distance_h is None: # Þetta er til þess að forrit chrash'ar ekki í fyrstu umferð, en þá skilar SFR02 forritið studnum None
-                time.sleep(0.1)
-                continue
-            
-            #print("Vinstri:",distance_v," Hægri:",distance_h) #----Debug
-            # Hér kemur logic'ið til þess að forðast hluti (valdar fjarlægðir fundust með að prufa)
-            if 1 < distance_v < UPPER_BOUNDS: # Athugar hvort vinstri skynjari sé innan marka 
-                if current_state != "beygja":
-                    #print("STOP! Beygji til vinstri") #----Debug
-                    # Kalla á föllin sem keyra mótórana með Motor controllernum
-                    stop()
-                    time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
-                    time.sleep(AVOID_TIMES)
-                    right(TURNING_SPEED)
-                    time.sleep(AVOID_TIMES)
-                    current_state = "beygja"
-                    
-            elif 1 < distance_h < UPPER_BOUNDS: # Athugar hvort hægri skynjari sé innan marka
-                if current_state != "beygja":
-                    #print("STOP! Beygji til hægri") #----Debug
-                    # Kalla á föllin sem keyra mótórana með Motor controllernum
-                    stop()
-                    time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
-                    time.sleep(AVOID_TIMES)
-                    left(TURNING_SPEED)
-                    time.sleep(AVOID_TIMES)
-                    current_state = "beygja"
-                
-            else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
-                if current_state != "afram":
-                    #print("You good, áfram!") #----Debug
-                    forward(FORWARD_SPEED)
-                    current_state = "afram"
-                    
-    # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum
-    except Exception as keyrsluError:
-        print("Ehv. for úrskeiðis", keyrsluError)
-        stop()
-        
-    except KeyboardInterrupt:
-        print("Notandi slökkti á forriti")
-        stop()
+controller_sturcture()
 
 
