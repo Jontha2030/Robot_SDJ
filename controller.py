@@ -56,3 +56,6 @@ def controller_sturcture():
                     print("D-pad left")
                 elif event.value == 1:
                     print("D-pad right")
+
+
+controller_sturcture()
