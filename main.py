@@ -9,9 +9,9 @@ import avoid_obstacles
 
 speed = 200
 def initialize_components():
-    SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Búum til þráð fyrir fjarlægðarskynjarana sem keyrir alltaf
+    SRF02Thread = threading.Thread(target=distance_scan, daemon=True) # Búum til þráð fyrir fjarlægðarskynjarana sem keyrir alltaf
     # þar sem það var vesen að slökkva og kveikja á honum
-    SRF02thread.start()
+    SRF02Thread.start()
 
 #Fall fyrir controller
 def controller_sturcture():
@@ -52,13 +52,15 @@ def controller_sturcture():
                     Button_Press["state"] = False
                     print("L1 pressed")
                     print("Entering AUTO-MODE...")
+                    automodeThread = threading.Thread(target=avoid_obstacles.avoid_obstacles, daemon=True)
+                    automodeThread.start()
                     time.sleep(1)
-                    avoid_obstacles.avoid_obstacles()
                 elif event.code == BTN_L2:
                     print("L2 pressed")
                     time.sleep(0.5)
                     Button_Press["state"] = True
                     stop()
+                    automodeThread.join(timeout=2)
                 elif event.code == BTN_R3:
                     print("R3 pressed")
 
