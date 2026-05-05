@@ -75,4 +75,4 @@ def index():
 
 if __name__ == '__main__':
     print("Server running...")
-    app.run(host='0.0.0.0', port=5000, threaded=True, ssl_context='adhoc')  # generates self-signed cert automatically
+    app.run(host='0.0.0.0', port=5000, threaded=True,ssl_context=('cert.pem', 'key.pem'))
