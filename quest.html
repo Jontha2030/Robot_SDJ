@@ -140,7 +140,18 @@
     }
 
     async function startTracking() {
-        log("Button pressed, connecting...");
+        log("Sending test POST...");
+        
+        // Test POST before any WebXR
+        const response = await fetch('/headtracking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ yaw: 45 })
+        });
+        const result = await response.json();
+        log("Test response: " + JSON.stringify(result));
+        
+        // Then start WebXR
         tryWebXR();
     }
 </script>
