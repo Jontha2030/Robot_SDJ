@@ -7,15 +7,30 @@ import threading
 import time
 import avoid_obstacles
 
-speed = 200
+
+# -------- LÝSING ---------
+# Þetta er aðal forritið fyrir róbótinn sem kallar á öll undir forritin 
+# Því er stýrt af notanda með PS4 fjarstýringu. 
+# Það er hægt að 
+# 1) Keyra frjálst
+# 2) Láta róbót keyra sjálfan og forðast hindarnir
+# 3) Spila lög
+
+# -------- FASTAR ---------
+SPEED = 200
+
+# Þetta fall kveikjir á SRF02 fjarlægðar skynjurunum þegar að forritið ræsist. Þeir eru alltaf í gangi þar sem að það
+# virðist vera vesen að slökkva og kveikja á þeim
 def initialize_components():
-    SRF02Thread = threading.Thread(target=distance_scan, daemon=True) # Búum til þráð fyrir fjarlægðarskynjarana sem keyrir alltaf
-    # þar sem það var vesen að slökkva og kveikja á honum
+    SRF02Thread = threading.Thread(target=distance_scan, daemon=True) # SRF02 forritið er keyrt á sér þráð þar sem það
+    # virkar sem endalaus while loopa sem er stanslaust að mæla fjarlæg. Síðan er hægt að virkja önnur forrit sem nýta
+    # þessar mælingar
     SRF02Thread.start()
 
-#Fall fyrir controller
+#Fall fyrir controllerinn sem er aðal partur kerfisns
 def controller_sturcture():
     try:
+        # Sæki tengingu við fjarstýringu (þarf að vera búið að tengjast við hana með Bluetooth)
         dev = InputDevice("/dev/input/event4")
 
         #Skillgreini takka
@@ -32,33 +47,41 @@ def controller_sturcture():
 
         print("Controller ready")
 
-
         #Ef ýtt er á taka þá gerist eitthvað
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
-                    backwards(speed)
+                    # Bakkar
+                    backwards(SPEED)
                 elif event.code == BTN_CIRCLE:
-                    right(speed)
+                    # Beygjir til hægri
+                    right(SPEED)
                 elif event.code == BTN_TRIANGLE:
-                    forward(speed)
+                    # Keyrir beint áfram
+                    forward(SPEED)
                 elif event.code == BTN_SQUARE:
-                    left(speed)
+                    # Beygjir til vinstri
+                    left(SPEED)
                 elif event.code == BTN_R1:
+                    # Stoppar mótóra
                     stop()
                 elif event.code == BTN_R2:
                     print("R2 pressed")
                 elif event.code == BTN_L1:
+                    # Ef ýtt er á þennan takka er sjálfstýringar forritið keyrt 
                     Button_Press["state"] = False
                     print("L1 pressed")
                     print("Entering AUTO-MODE...")
-                    automodeThread = threading.Thread(target=avoid_obstacles.avoid_obstacles, daemon=True)
+                    automodeThread = threading.Thread(target=avoid_obstacles.avoid_obstacles, daemon=True) # Þá er bara kveikt á sér
+                    # þræði til þess að það sé ennþá hægt að hlusta á takka fjarstýringar
                     automodeThread.start()
                 elif event.code == BTN_L2:
+                    # Ef ýtt er á þennan takka er slökkt á sjálfstýringu
                     print("L2 pressed")
                     Button_Press["state"] = True
                     stop()
-                    automodeThread.join(timeout=2)
+                    stop_playing()
+                    automodeThread.join(timeout=2) # Geng frá þræði
                     
                 elif event.code == BTN_R3:
                     print("R3 pressed")
@@ -74,19 +97,27 @@ def controller_sturcture():
 
                 elif event.code == ecodes.ABS_HAT0X:
                     if event.value == -1:
+                        # Slekkur á lagi
                         stop_playing()
                         print("D-pad left")
                     elif event.value == 1:
+                        # Kveikir á lagi
                         play_random()
                         print("D-pad right")
                         
+    # Hér er gripið það þegar notandi slekkur á forriti og séð til þess að öllum ferlum sé hætt
     except KeyboardInterrupt:
         print("Notandi slökkti á forriti")
         stop_playing()
         stop()
         Button_Press["state"] = False
+    # Hér er gripið það þegar einhvað ófyrirséð fer úrskeiðis og séð til þess að öllu ferlum sé hætt
+    except Exception as mainVilla:
+        print("Einhvað fór úrskeiðis\n", mainVilla)
+        stop_playing()
+        stop()
+        Button_Press["state"] = False
 
-                        
 
 if __name__ == "__main__":
     initialize_components()
