@@ -4,11 +4,13 @@ from play import play_random, stop_playing
 from SRF02 import distance_scan
 from __init__ import Button_Press
 import threading
+import time
 import avoid_obstacles
 
 speed = 200
 def initialize_components():
     SRF02thread = threading.Thread(target=distance_scan, daemon=True) # Búum til þráð fyrir fjarlægðarskynjarana sem keyrir alltaf
+    # þar sem það var vesen að slökkva og kveikja á honum
     SRF02thread.start()
 
 #Fall fyrir controller
@@ -49,10 +51,12 @@ def controller_sturcture():
                 elif event.code == BTN_L1:
                     Button_Press["state"] = False
                     print("L1 pressed")
-                    print("Entering AUTO-MODE")
+                    print("Entering AUTO-MODE...")
+                    time.sleep(1)
                     avoid_obstacles.avoid_obstacles()
                 elif event.code == BTN_L2:
                     print("L2 pressed")
+                    time.sleep(0.5)
                     Button_Press["state"] = True
                     stop()
                 elif event.code == BTN_R3:
@@ -76,7 +80,7 @@ def controller_sturcture():
                         print("D-pad right")
                         
     except KeyboardInterrupt:
-        print("Notandi hætti forriti")
+        print("Notandi slökkti á forriti")
         stop()
         Button_Press["state"] = False
 

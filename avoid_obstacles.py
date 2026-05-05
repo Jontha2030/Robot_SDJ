@@ -18,8 +18,9 @@ SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 def avoid_obstacles():
     # Bý til tvo threads þar sem að eftirfarandi tveir hlutir keyra  með while loopum
     try:        
+        stop_event = threading.Event()
         servothread = threading.Thread(target=selfturning_servos, daemon=True) # Einna fyrir servoana
-        controllerthread = threading.Thread(target=controller_sturcture, daemon=True) # Einn fyrir servo'ana
+        controllerthread = threading.Thread(target=controller_sturcture, daemon=True) # Þurfum þráð fyrir controllerinn til þess að geta hlustað á takka ennþá
         servothread.start()
         controllerthread.start()
         time.sleep(0.8)
@@ -29,6 +30,7 @@ def avoid_obstacles():
         # Spilar lag
         speaker = Speaker()
         speaker.play()
+        print("AUTO-MODE active")
         
     except Exception as InitError:
         print("Einhvað fór úrsskeiðis við virkjun: ", InitError)
@@ -44,7 +46,10 @@ def avoid_obstacles():
             
             if button_status:
                 Button_Press["state"] = False
-                print("Exiting AUTO-MODE")
+                print("Exiting AUTO-MODE...")
+                stop_event.set()
+                servothread.join(timeout=2)
+                controllerthread.join(timeout=2)
                 break
                 
             if distance_v is None or distance_h is None: # Þetta er til þess að forrit chrash'ar ekki í fyrstu umferð, en þá skilar SFR02 forritið studnum None
@@ -89,9 +94,10 @@ def avoid_obstacles():
         stop()
         
     except KeyboardInterrupt:
-        print("Notandi slökkti á forriti")
+        print("Notandi slökkti á AUTO-MODE")
         stop()
         
+    print("AUTO-MODE deactivated")
         
 if __name__ == "__main__":
     avoid_obstacles()
