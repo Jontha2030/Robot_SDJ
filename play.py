@@ -12,6 +12,7 @@ import time
 import random
 import signal
 import subprocess
+import pygame
 
 # Slóð á PID skrá og log
 PID_FILE = "/tmp/speaker.pid"
@@ -76,7 +77,6 @@ def stop_playing():
 
 def play_song(song_path):
     """Spila eitt lag (þessi keyrir í bakgrunni)."""
-    import pygame
     
     pygame.mixer.pre_init(frequency=44100, size=-16, channels=2, buffer=4096)
     pygame.mixer.init()
