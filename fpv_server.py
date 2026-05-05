@@ -12,10 +12,10 @@ sock = Sock(app)
 kit = ServoKit(channels=8)
 
 # Servo channels
-PAN_SERVO  = 3  # left/right (yaw)
+PAN_SERVO  = 1  # left/right (yaw)
 
 # Initialize servos to center
-#kit.servo[PAN_SERVO].angle  = 90
+kit.servo[PAN_SERVO].angle  = 90
 # Setup camera
 camera = Picamera2()
 camera.configure(camera.create_video_configuration(
@@ -58,9 +58,9 @@ def headtracking(ws):
             data = json.loads(ws.receive())
             yaw   = data.get('yaw', 0)    # left/right (-180 to 180)
             # Map to servo angles
-            #pan_angle  = map_to_servo(clamp(yaw,   -90,  90), -90,  90)
+            pan_angle  = map_to_servo(clamp(yaw,   -90,  90), -90,  90)
 
-            #kit.servo[PAN_SERVO].angle  = pan_angle
+            kit.servo[PAN_SERVO].angle  = pan_angle
 
         except Exception as e:
             print(f"Tracking error: {e}")
