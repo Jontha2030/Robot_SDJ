@@ -52,8 +52,8 @@
             console.log("Websocket connected");
             document.getElementById('status').textContent 
                           = 'Head tracking: CONNECTED';
-            ws.send(JSON.stringify({ yaw: 0}));
-            ws.send(JSON.stringify({ yaw: 100}))};
+            //ws.send(JSON.stringify({ yaw: 0}));
+            //ws.send(JSON.stringify({ yaw: 100}))};
         ws.onerror = (e) => {
             console.log("WebSocket error:", e)
             document.getElementById('status').textContent = "Head tracking: CONNECTED"
