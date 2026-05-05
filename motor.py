@@ -18,24 +18,35 @@ def send_motors(m1, m2):
     bus.write_i2c_block_data(I2C_ADDRESS, 0x00, data)
 
 
+#Skoðar hvort hraði fari yfir leyfinlegan hraða
+def check_speed(speed):
+    if speed >= 240:
+        return 240
+    else:
+        return speed
+    
 #Seigir mótor að fara áfram
-def forward():
-    send_motors(100,-100)
+def forward(speed):
+    speed = check_speed(speed)
+    send_motors(speed + 15,-speed)
 
 
-#Seigir mótor að fara tilbaka
-def backwards():
-    send_motors(-100, 100)
+#Seigir mótor að fara afturábaka
+def backwards(speed):
+    speed = check_speed(speed)
+    send_motors(-(speed + 15), speed)
 
 
 #Seigir mótor að fara til hægri
-def right():
-    send_motors(100, 0)
+def right(speed):
+    speed = check_speed(speed)
+    send_motors(speed + 15,speed)
 
 
 #Seigir mótor að fara til vinstri
-def left():
-    send_motors(0, -100)
+def left(speed):
+    speed = check_speed(speed)
+    send_motors(-(speed + 15),-speed)
 
 
 #Seigir mótor að stoppa
