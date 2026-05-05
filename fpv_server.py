@@ -2,7 +2,7 @@ import io
 import json
 import threading
 import time
-from flask import Flask, Response
+from flask import Flask, Response, request, jsonify
 from flask_sock import Sock
 from picamera2 import Picamera2
 from adafruit_servokit import ServoKit
@@ -50,23 +50,19 @@ def map_to_servo(value, in_min, in_max):
     # Maps head rotation to 0-180 servo range
     return int((value - in_min) / (in_max - in_min) * 180)
 
-@sock.route('/headtracking')
-def headtracking(ws):
-    print("Quest connected")
-    while True:
-        try:
-            data = json.loads(ws.receive())
-            yaw   = data.get('yaw', 0)    # left/right (-180 to 180)
-            # Map to servo angles
-            pan_angle  = map_to_servo(clamp(yaw,   -90,  90), -90,  90)
-            print("Looking,",pan_angle)
 
-            kit.servo[PAN_SERVO].angle  = pan_angle
-
-        except Exception as e:
-            print(f"Tracking error: {e}")
-            break
-    print("Quest disconnected")
+@app.route('/headtracking', methods=['POST'])
+def headtracking():
+    try:
+        data = request.get_json()
+        yaw = data.get('yaw', 0)
+        pan_angle = map_to_servo(clamp(yaw, -90, 90), -90, 90)
+        print("Looking:", pan_angle)
+        kit.servo[PAN_SERVO].angle = pan_angle
+        return jsonify({'ok': True})
+    except Exception as e:
+        print(f"Tracking error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 # ---- Serve the HTML page ----
 @app.route('/')

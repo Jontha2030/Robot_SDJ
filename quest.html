@@ -61,9 +61,11 @@
     }
 
     function sendYaw(yaw) {
-        if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ yaw: yaw }));
-        }
+        fetch('/headtracking', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ yaw: yaw })
+        }).catch(e => log("Send error: " + e));
     }
 
     function startDeviceOrientation() {
@@ -139,9 +141,7 @@
 
     async function startTracking() {
         log("Button pressed, connecting...");
-        connectWebSocket(() => {
-            tryWebXR();
-        });
+        tryWebXR();
     }
 </script>
 </body>
