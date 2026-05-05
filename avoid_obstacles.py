@@ -41,7 +41,6 @@ def avoid_obstacles():
                 button_status = Button_Press["state"]
             
             if button_status:
-                Button_Press["state"] = False
                 print("Exiting AUTO-MODE...")
                 stop_event.set()
                 servothread.join(timeout=2)

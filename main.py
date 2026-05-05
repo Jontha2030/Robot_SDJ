@@ -57,10 +57,11 @@ def controller_sturcture():
                     time.sleep(1)
                 elif event.code == BTN_L2:
                     print("L2 pressed")
-                    time.sleep(0.5)
                     Button_Press["state"] = True
                     stop()
                     automodeThread.join(timeout=2)
+                    time.sleep(1)
+                    
                 elif event.code == BTN_R3:
                     print("R3 pressed")
 
