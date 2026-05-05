@@ -1,5 +1,6 @@
 import time
 from adafruit_servokit import ServoKit
+from __init__ import Button_Press, lock
 
 # Virkjar PCA9685 chippinn sem er víst með 8 channels
 kit = ServoKit(channels=8)
@@ -17,7 +18,14 @@ def servo_init(servos):
 
 #Fall sem lætur servos snúa sjálfkrafa
 def selfturning_servos():
+    servo_init(servos)
     while True:
+        with lock:
+            button_state = Button_Press["state"]
+            
+        if button_state:
+            print("Slekk á servo'um")
+            break
 
         #Lætur þá snúa beint áfram
         kit.servo[0].angle = 90
