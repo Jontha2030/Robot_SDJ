@@ -44,18 +44,27 @@
     }
 
     async function startTracking() {
+        console.log("Starting Tracking")
         // Connect WebSocket
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         ws = new WebSocket(`${protocol}//${PI_IP}:5000/headtracking`);
-        ws.onopen  = () => document.getElementById('status').textContent 
-                          = 'Head tracking: CONNECTED';
-        ws.onclose = () => document.getElementById('status').textContent 
-                          = 'Head tracking: DISCONNECTED';
+        ws.onopen  = () => {console.log("Websocket connected");
+            document.getElementById('status').textContent 
+                          = 'Head tracking: CONNECTED';}
+        ws.onerror = (e) => {
+            console.log("WebSocket error:", e)
+            document.getElementById('status').textContent = "Head tracking: CONNECTED"
+        }
+        ws.onclose = () => {
+            console.log("WebSocket closed");
+            document.getElementById('status').textContent 
+                          = 'Head tracking: DISCONNECTED';}
 
+        console.log("navigator.xr = ", navigator.xr)
         // Request VR session for head rotation data
         if (navigator.xr) {
             try {
-                xrSession = await navigator.xr.requestSession('immersive-vr');
+                xrSession = await navigator.xr.requestSession('inline');
                 refSpace  = await xrSession.requestReferenceSpace('local');
 
                 xrSession.requestAnimationFrame(function onFrame(time, frame) {
