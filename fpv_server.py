@@ -59,6 +59,7 @@ def headtracking(ws):
             yaw   = data.get('yaw', 0)    # left/right (-180 to 180)
             # Map to servo angles
             pan_angle  = map_to_servo(clamp(yaw,   -90,  90), -90,  90)
+            print("Looking,",pan_angle)
 
             kit.servo[PAN_SERVO].angle  = pan_angle
 
