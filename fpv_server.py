@@ -7,7 +7,7 @@ from __init__ import kit, lock
 
 app = Flask(__name__)
 
-PAN_SERVO = 1
+PAN_SERVO = 3
 kit.servo[PAN_SERVO].angle = 90
 
 camera = Picamera2()
