@@ -67,7 +67,7 @@
         // Request VR session for head rotation data
         if (navigator.xr) {
             try {
-                xrSession = await navigator.xr.requestSession('inline');
+                xrSession = await navigator.xr.requestSession('immersive-vr');
                 refSpace  = await xrSession.requestReferenceSpace('local');
 
                 xrSession.requestAnimationFrame(function onFrame(time, frame) {
