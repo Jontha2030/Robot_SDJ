@@ -54,13 +54,11 @@ def controller_sturcture():
                     print("Entering AUTO-MODE...")
                     automodeThread = threading.Thread(target=avoid_obstacles.avoid_obstacles, daemon=True)
                     automodeThread.start()
-                    time.sleep(1)
                 elif event.code == BTN_L2:
                     print("L2 pressed")
                     Button_Press["state"] = True
                     stop()
                     automodeThread.join(timeout=2)
-                    time.sleep(1)
                     
                 elif event.code == BTN_R3:
                     print("R3 pressed")
