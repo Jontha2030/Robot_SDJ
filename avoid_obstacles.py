@@ -1,7 +1,5 @@
 from motor import forward, backwards, right, left, stop
 from speaker import Speaker
-from SRF02 import distance_scan
-from main import controller_sturcture
 import time
 import threading
 from servo import selfturning_servos, servo_init
@@ -20,9 +18,7 @@ def avoid_obstacles():
     try:        
         stop_event = threading.Event()
         servothread = threading.Thread(target=selfturning_servos, daemon=True) # Einna fyrir servoana
-        controllerthread = threading.Thread(target=controller_sturcture, daemon=True) # Þurfum þráð fyrir controllerinn til þess að geta hlustað á takka ennþá
         servothread.start()
-        controllerthread.start()
         time.sleep(0.8)
     
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
@@ -45,11 +41,9 @@ def avoid_obstacles():
                 button_status = Button_Press["state"]
             
             if button_status:
-                Button_Press["state"] = False
                 print("Exiting AUTO-MODE...")
                 stop_event.set()
                 servothread.join(timeout=2)
-                controllerthread.join(timeout=2)
                 break
                 
             if distance_v is None or distance_h is None: # Þetta er til þess að forrit chrash'ar ekki í fyrstu umferð, en þá skilar SFR02 forritið studnum None
