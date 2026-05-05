@@ -45,7 +45,8 @@
 
     async function startTracking() {
         // Connect WebSocket
-        ws = new WebSocket(`ws://${PI_IP}:5000/headtracking`);
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        ws = new WebSocket(`${protocol}//${PI_IP}:5000/headtracking`);
         ws.onopen  = () => document.getElementById('status').textContent 
                           = 'Head tracking: CONNECTED';
         ws.onclose = () => document.getElementById('status').textContent 
@@ -76,8 +77,9 @@
                     = 'Using device orientation (no VR)';
                 window.addEventListener('deviceorientation', (e) => {
                     if (ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({
-                            yaw:   e.alpha || 0}));
+                        let yaw = e.alpha || 0;
+                        if(yaw > 180) yaw -= 360;
+                        ws.send(JSON.stringify({ yaw }));
                     }
                 });
             }
