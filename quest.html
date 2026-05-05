@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FPV View</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: black; display: flex; 
+               justify-content: center; align-items: center; 
+               height: 100vh; flex-direction: column; }
+        #stream { width: 100%; max-width: 960px; }
+        #status { color: white; font-size: 14px; margin-top: 10px; }
+        #startBtn { 
+            margin-top: 20px; padding: 15px 30px;
+            font-size: 18px; background: #4CAF50; 
+            color: white; border: none; border-radius: 8px; 
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <img id="stream" src="/video" alt="Camera Feed">
+    <div id="status">Head tracking: OFF</div>
+    <button id="startBtn" onclick="startTracking()">Start Head Tracking</button>
+
+<script>
+    const PI_IP = window.location.hostname;  // automatically uses Pi's IP
+    let ws = null;
+    let xrSession = null;
+    let refSpace = null;
+
+    // Convert quaternion to Euler angles (yaw/pitch)
+    function quatToEuler(q) {
+        const yaw = Math.atan2(
+            2 * (q.w * q.y + q.z * q.x),
+            1 - 2 * (q.y * q.y + q.z * q.z)
+        ) * (180 / Math.PI);
+
+        const pitch = Math.asin(
+            Math.max(-1, Math.min(1, 2 * (q.w * q.x - q.y * q.z)))
+        ) * (180 / Math.PI);
+
+        return { yaw, pitch };
+    }
+
+    async function startTracking() {
+        // Connect WebSocket
+        ws = new WebSocket(`ws://${PI_IP}:5000/headtracking`);
+        ws.onopen  = () => document.getElementById('status').textContent 
+                          = 'Head tracking: CONNECTED';
+        ws.onclose = () => document.getElementById('status').textContent 
+                          = 'Head tracking: DISCONNECTED';
+
+        // Request VR session for head rotation data
+        if (navigator.xr) {
+            try {
+                xrSession = await navigator.xr.requestSession('immersive-vr');
+                refSpace  = await xrSession.requestReferenceSpace('local');
+
+                xrSession.requestAnimationFrame(function onFrame(time, frame) {
+                    const pose = frame.getViewerPose(refSpace);
+                    if (pose && ws.readyState === WebSocket.OPEN) {
+                        const orientation = pose.transform.orientation;
+                        const { yaw, pitch } = quatToEuler(orientation);
+                        ws.send(JSON.stringify({ yaw }));
+                    }
+                    xrSession.requestAnimationFrame(onFrame);
+                });
+
+                document.getElementById('startBtn').textContent = 'Tracking Active';
+                document.getElementById('startBtn').disabled = true;
+
+            } catch (e) {
+                // Fallback: use device orientation (works without full VR mode)
+                document.getElementById('status').textContent 
+                    = 'Using device orientation (no VR)';
+                window.addEventListener('deviceorientation', (e) => {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        ws.send(JSON.stringify({
+                            yaw:   e.alpha || 0}));
+                    }
+                });
+            }
+        }
+    }
+</script>
+</body>
+</html>
