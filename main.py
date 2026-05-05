@@ -6,7 +6,7 @@ from __init__ import Button_Press
 import threading
 import time
 import avoid_obstacles
-import fpv_server
+from fpv_server import start_server
 
 
 # -------- LÝSING ---------
@@ -26,9 +26,9 @@ def initialize_components():
     SRF02Thread = threading.Thread(target=distance_scan, daemon=True) # SRF02 forritið er keyrt á sér þráð þar sem það
     # virkar sem endalaus while loopa sem er stanslaust að mæla fjarlæg. Síðan er hægt að virkja önnur forrit sem nýta
     # þessar mælingar
-    websiteThread = threading.Thread(target=fpv_server, daemon=True)
+    fpvThread = threading.Thread(target=start_server, daemon=True)
     SRF02Thread.start()
-    websiteThread.start()
+    fpvThread.start()
 
 #Fall fyrir controllerinn sem er aðal partur kerfisns
 def controller_sturcture():
