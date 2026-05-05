@@ -1,9 +1,8 @@
 import time
 from adafruit_servokit import ServoKit
-from __init__ import Button_Press, lock
+from __init__ import Button_Press, lock, kit
 
 # Virkjar PCA9685 chippinn sem er víst með 8 channels
-kit = ServoKit(channels=8)
 
 # Skilgreina í hvaða númer servo'arnir eru tengdir á borðinu
 # eru frá 0-7 (8 pláss/channels)

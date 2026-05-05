@@ -3,10 +3,9 @@ import json
 import time
 from flask import Flask, Response, request, jsonify
 from picamera2 import Picamera2
-from adafruit_servokit import ServoKit
+from __init__ import kit, lock
 
 app = Flask(__name__)
-kit = ServoKit(channels=8)
 
 PAN_SERVO = 1
 kit.servo[PAN_SERVO].angle = 90
@@ -48,7 +47,8 @@ def headtracking():
         yaw = data.get('yaw', 0)
         pan_angle = map_to_servo(clamp(yaw, -90, 90), -90, 90)
         print("Looking:", pan_angle)
-        kit.servo[PAN_SERVO].angle = pan_angle
+        with lock:
+            kit.servo[PAN_SERVO].angle = pan_angle
         return jsonify({'ok': True})
     except Exception as e:
         print(f"Tracking error: {e}")
