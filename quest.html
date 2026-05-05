@@ -48,9 +48,12 @@
         // Connect WebSocket
         const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
         ws = new WebSocket(`${protocol}//${PI_IP}:5000/headtracking`);
-        ws.onopen  = () => {console.log("Websocket connected");
+        ws.onopen  = () => {
+            console.log("Websocket connected");
             document.getElementById('status').textContent 
-                          = 'Head tracking: CONNECTED';}
+                          = 'Head tracking: CONNECTED';
+            ws.send(JSON.stringify({ yaw: 0}));
+            ws.send(JSON.stringify({ yaw: 100}))};
         ws.onerror = (e) => {
             console.log("WebSocket error:", e)
             document.getElementById('status').textContent = "Head tracking: CONNECTED"
@@ -68,10 +71,16 @@
                 refSpace  = await xrSession.requestReferenceSpace('local');
 
                 xrSession.requestAnimationFrame(function onFrame(time, frame) {
+                    console.log("XR frame running");
                     const pose = frame.getViewerPose(refSpace);
+                    if (!pose){
+                        console.log("No XR pose");
+                    };
                     if (pose && ws.readyState === WebSocket.OPEN) {
                         const orientation = pose.transform.orientation;
                         const { yaw, pitch } = quatToEuler(orientation);
+
+                        console.log("Sending yaw:", yaw);
                         ws.send(JSON.stringify({ yaw }));
                     }
                     xrSession.requestAnimationFrame(onFrame);
