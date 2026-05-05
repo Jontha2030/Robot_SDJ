@@ -9,7 +9,9 @@
                justify-content: center; align-items: center; 
                height: 100vh; flex-direction: column; }
         #stream { width: 100%; max-width: 960px; }
-        #status { color: white; font-size: 14px; margin-top: 10px; }
+        #status { color: white; font-size: 14px; margin-top: 10px; font-family: sans-serif; }
+        #log    { color: yellow; font-size: 12px; margin-top: 10px; font-family: monospace; 
+                  max-width: 960px; word-wrap: break-word; }
         #startBtn { 
             margin-top: 20px; padding: 15px 30px;
             font-size: 18px; background: #4CAF50; 
@@ -21,87 +23,125 @@
 <body>
     <img id="stream" src="/video" alt="Camera Feed">
     <div id="status">Head tracking: OFF</div>
+    <div id="log">Log: waiting...</div>
     <button id="startBtn" onclick="startTracking()">Start Head Tracking</button>
 
 <script>
-    const PI_IP = window.location.hostname;  // automatically uses Pi's IP
+    const PI_IP = window.location.hostname;
     let ws = null;
-    let xrSession = null;
-    let refSpace = null;
 
-    // Convert quaternion to Euler angles (yaw/pitch)
-    function quatToEuler(q) {
-        const yaw = Math.atan2(
-            2 * (q.w * q.y + q.z * q.x),
-            1 - 2 * (q.y * q.y + q.z * q.z)
-        ) * (180 / Math.PI);
+    function log(msg) {
+        console.log(msg);
+        document.getElementById('log').textContent = 'Log: ' + msg;
+    }
 
-        const pitch = Math.asin(
-            Math.max(-1, Math.min(1, 2 * (q.w * q.x - q.y * q.z)))
-        ) * (180 / Math.PI);
+    function setStatus(msg) {
+        document.getElementById('status').textContent = 'Head tracking: ' + msg;
+    }
 
-        return { yaw, pitch };
+    function connectWebSocket(onReady) {
+        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+        ws = new WebSocket(`${protocol}//${PI_IP}:5000/headtracking`);
+
+        ws.onopen = () => {
+            log("WebSocket connected");
+            setStatus("CONNECTED");
+            if (onReady) onReady();
+        };
+
+        ws.onerror = (e) => {
+            log("WebSocket error");
+            setStatus("ERROR");
+        };
+
+        ws.onclose = () => {
+            log("WebSocket closed");
+            setStatus("DISCONNECTED");
+        };
+    }
+
+    function sendYaw(yaw) {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ yaw: yaw }));
+        }
+    }
+
+    function startDeviceOrientation() {
+        log("Using device orientation fallback");
+        setStatus("DEVICE ORIENTATION");
+
+        // iOS requires permission
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission().then(response => {
+                if (response === 'granted') {
+                    window.addEventListener('deviceorientation', handleOrientation);
+                }
+            });
+        } else {
+            window.addEventListener('deviceorientation', handleOrientation);
+        }
+    }
+
+    function handleOrientation(e) {
+        let yaw = e.alpha || 0;  // 0-360 degrees
+        if (yaw > 180) yaw -= 360;  // convert to -180 to 180
+        log("Yaw: " + yaw.toFixed(1));
+        sendYaw(yaw);
+    }
+
+    async function tryWebXR() {
+        if (!navigator.xr) {
+            log("WebXR not available, using device orientation");
+            startDeviceOrientation();
+            return;
+        }
+
+        const supported = await navigator.xr.isSessionSupported('immersive-vr')
+                          .catch(() => false);
+
+        if (!supported) {
+            log("immersive-vr not supported, using device orientation");
+            startDeviceOrientation();
+            return;
+        }
+
+        try {
+            log("Requesting WebXR session...");
+            const session  = await navigator.xr.requestSession('immersive-vr');
+            const refSpace = await session.requestReferenceSpace('local');
+            log("WebXR session started!");
+            setStatus("WebXR ACTIVE");
+
+            session.requestAnimationFrame(function onFrame(time, frame) {
+                const pose = frame.getViewerPose(refSpace);
+                if (pose) {
+                    const q = pose.transform.orientation;
+                    const yaw = Math.atan2(
+                        2 * (q.w * q.y + q.z * q.x),
+                        1 - 2 * (q.y * q.y + q.z * q.z)
+                    ) * (180 / Math.PI);
+
+                    log("XR Yaw: " + yaw.toFixed(1));
+                    sendYaw(yaw);
+                }
+                session.requestAnimationFrame(onFrame);
+            });
+
+            document.getElementById('startBtn').textContent = 'Tracking Active';
+            document.getElementById('startBtn').disabled = true;
+
+        } catch (e) {
+            log("WebXR failed: " + e.message + " — using device orientation");
+            startDeviceOrientation();
+        }
     }
 
     async function startTracking() {
-        console.log("Starting Tracking")
-        // Connect WebSocket
-        const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-        ws = new WebSocket(`${protocol}//${PI_IP}:5000/headtracking`);
-        ws.onopen  = () => {
-            console.log("Websocket connected");
-            document.getElementById('status').textContent 
-                          = 'Head tracking: CONNECTED';
-            //ws.send(JSON.stringify({ yaw: 0}));
-            //ws.send(JSON.stringify({ yaw: 100}))};
-        ws.onerror = (e) => {
-            console.log("WebSocket error:", e)
-            document.getElementById('status').textContent = "Head tracking: CONNECTED"
-        }
-        ws.onclose = () => {
-            console.log("WebSocket closed");
-            document.getElementById('status').textContent 
-                          = 'Head tracking: DISCONNECTED';}
-
-        console.log("navigator.xr = ", navigator.xr)
-        // Request VR session for head rotation data
-        if (navigator.xr) {
-            try {
-                xrSession = await navigator.xr.requestSession('immersive-vr');
-                refSpace  = await xrSession.requestReferenceSpace('local');
-
-                xrSession.requestAnimationFrame(function onFrame(time, frame) {
-                    console.log("XR frame running");
-                    const pose = frame.getViewerPose(refSpace);
-                    if (!pose){
-                        console.log("No XR pose");
-                    };
-                    if (pose && ws.readyState === WebSocket.OPEN) {
-                        const orientation = pose.transform.orientation;
-                        const { yaw, pitch } = quatToEuler(orientation);
-
-                        console.log("Sending yaw:", yaw);
-                        ws.send(JSON.stringify({ yaw }));
-                    }
-                    xrSession.requestAnimationFrame(onFrame);
-                });
-
-                document.getElementById('startBtn').textContent = 'Tracking Active';
-                document.getElementById('startBtn').disabled = true;
-
-            } catch (e) {
-                // Fallback: use device orientation (works without full VR mode)
-                document.getElementById('status').textContent 
-                    = 'Using device orientation (no VR)';
-                window.addEventListener('deviceorientation', (e) => {
-                    if (ws.readyState === WebSocket.OPEN) {
-                        let yaw = e.alpha || 0;
-                        if(yaw > 180) yaw -= 360;
-                        ws.send(JSON.stringify({ yaw }));
-                    }
-                });
-            }
-        }
+        log("Button pressed, connecting...");
+        connectWebSocket(() => {
+            tryWebXR();
+        });
     }
 </script>
 </body>
