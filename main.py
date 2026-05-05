@@ -82,6 +82,7 @@ def controller_sturcture():
                         
     except KeyboardInterrupt:
         print("Notandi slökkti á forriti")
+        stop_playing()
         stop()
         Button_Press["state"] = False
 
