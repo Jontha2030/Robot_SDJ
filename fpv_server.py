@@ -17,11 +17,11 @@ app = Flask(__name__) # Nota Flask til þess að búa til vefsíðu
 PAN_SERVO = 3
 kit.servo[PAN_SERVO].angle = 90
 
-camera = Picamera2()
-camera.configure(camera.create_video_configuration(
-    main={"size": (640, 480)}
-))
-camera.start()
+#camera = Picamera2()
+#camera.configure(camera.create_video_configuration(
+#    main={"size": (640, 480)}
+#))
+#camera.start()
 time.sleep(1)
 
 # ------
@@ -37,7 +37,7 @@ def map_to_servo(value, in_min, in_max):
 def generate_frames():
     while True:
         stream = io.BytesIO()
-        camera.capture_file(stream, format='jpeg')
+        #camera.capture_file(stream, format='jpeg')
         stream.seek(0)
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n'
@@ -48,7 +48,7 @@ def generate_frames():
 @app.route('/video')
 def video():
     return Response(
-        generate_frames(),
+        #generate_frames(),
         mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
@@ -77,8 +77,7 @@ def index():
 # Þetta er fall sem ræsir vefsíðuna en það er sér fall til þess að geta kallað á það sem þráð í main
 def start_server():
     print("FPV server running...")
-    app.run(host='0.0.0.0', port=5000, threaded=True,
-            ssl_context=('cert.pem', 'key.pem'))
+    app.run(host='0.0.0.0', port=5000, threaded=True)
 
 if __name__ == '__main__':
     start_server()

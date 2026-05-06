@@ -3,16 +3,16 @@
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>FPV View</title>
-    <!-- Hér koma grófar stíleseringar -->
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: black; display: flex; 
                justify-content: center; align-items: center; 
                height: 100vh; flex-direction: column; }
         #stream { width: 100%; max-width: 960px; }
-        #status { color: white; font-size: 14px; margin-top: 10px; font-family: sans-serif; }
+        #status { color: white; font-size: 16px; margin-top: 10px; font-family: sans-serif; }
         #log    { color: yellow; font-size: 12px; margin-top: 10px; font-family: monospace; 
                   max-width: 960px; word-wrap: break-word; }
+        #yawDisplay { color: lime; font-size: 24px; margin-top: 10px; font-family: monospace; }
         #startBtn { 
             margin-top: 20px; padding: 15px 30px;
             font-size: 18px; background: #4CAF50; 
@@ -22,33 +22,28 @@
     </style>
 </head>
 <body>
-    <!-- Hér eru allir "kubbar" vefsíðunar -->
-    <img id="stream" src="/video" alt="Camera Feed"> <!-- Mynda kubburinn þar sem myndir frá Pi myndavél birtast -->
-    <div id="status">Head tracking: OFF</div> <!-- Texta kubbur þar sem birt er debug línur frá kóða -->
-    <div id="log">Log: waiting...</div> <!-- -II- -->
-    <div id="yawDisplay" style="color: lime; font-size: 24px; margin-top: 10px; font-family: monospace;">
-    Raw yaw: --</div>
-    <button id="startBtn" onclick="startTracking()">Start Head Tracking</button> <!-- Takki sem á að kveikja á VR gleraugna stýringu (virkar ekki eins og er) -->
+    <img id="stream" src="/video" alt="Camera Feed">
+    <div id="status">Head tracking: OFF</div>
+    <div id="log">Log: waiting...</div>
+    <div id="yawDisplay">Raw yaw: --</div>
+    <button id="startBtn" onclick="startTracking()">Start Head Tracking</button>
 
-<!-- Síðan kemur fullt af Javascript kóða til að forrita virkni í vefsíðu -->
 <script>
     let tracking = false;
-    let baseYaw = null;  // calibration reference
+    let baseYaw = null;
     let lastSentYaw = null;
-    const DEADZONE = 2;  // Höfum ehv. fastar gráður sem þarf að hreyfa haus til þess að við séum ekki að senda allar pínulitlu hreyfingar sem kunna að skynjast
+    const DEADZONE = 2;
 
-    // Debug skilaboð
     function log(msg) {
         console.log(msg);
         document.getElementById('log').textContent = 'Log: ' + msg;
     }
-    // Debug skilaboð
+
     function setStatus(msg) {
         document.getElementById('status').textContent = 'Head tracking: ' + msg;
     }
-    // Hér er fall sem sér um að senda upplýsingarnar úr VR gleraugunum sem við notum síðan til þess að hreyfa servo'a
+
     function sendYaw(yaw) {
-        // Þessi if setning er til þess að sjá til þess að við sendum aðeins þegar að VR gleraugu hreuyfast um meira en 2 gráður
         if (lastSentYaw !== null && Math.abs(yaw - lastSentYaw) < DEADZONE) return;
         lastSentYaw = yaw;
 
@@ -58,22 +53,24 @@
             body: JSON.stringify({ yaw: yaw })
         }).catch(e => log("Send error: " + e.message));
     }
-    
+
     function handleOrientation(e) {
-        // Show raw value regardless of tracking state
-        document.getElementById('yawDisplay').textContent = 
+        // Always show raw value so we can confirm events are firing
+        document.getElementById('yawDisplay').textContent =
             'Raw alpha: ' + (e.alpha ? e.alpha.toFixed(1) : 'null');
 
         if (!tracking) return;
 
         let raw = e.alpha || 0;
 
+        // Calibrate on first reading
         if (baseYaw === null) {
             baseYaw = raw;
-            log("Calibrated at " + raw.toFixed(1) + "°. Move your head!");
+            log("Calibrated at " + raw.toFixed(1) + "° — move your head!");
             return;
         }
 
+        // Relative yaw from starting position
         let yaw = raw - baseYaw;
         if (yaw > 180)  yaw -= 360;
         if (yaw < -180) yaw += 360;
@@ -82,40 +79,17 @@
         sendYaw(yaw);
     }
 
-    function startTracking() {
-        // Check til þess að grípa error. Þetta er að athuga hvort "DevicOrientationEvent" eiginleiki gleraugnanna sér virkur
-        if (!window.DeviceOrientationEvent) {
-            log("Device orientation not supported!");
-            return;
-        }
-
-        // Check til þess að grípa error. Það eru víst ehv. browser'ar með leyfis vesen
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            DeviceOrientationEvent.requestPermission()
-                .then(response => {
-                    if (response === 'granted') {
-                        activateTracking();
-                    } else {
-                        log("Permission denied");
-                    }
-                })
-                .catch(e => log("Permission error: " + e));
-        } else {
-            activateTracking(); // Ef allta sleppur í gegn, er hægt að hefja gagnasendingar
-        }
-    }
-
-    // Þetta er fallið sem sér um að hlusta á VR gleraugun og kalla á viðeigandi föll til að senda upplýsingar á Pi'inn þegar þau eru hreyfð
     function activateTracking() {
         tracking = true;
-        baseYaw = null;  // reset calibration
-        window.addEventListener('deviceorientation', handleOrientation); // Þessi event listener er að hlusta á VR gleraugun og sendir gögn á Pi'inn þegar þau hreyfast
-        
+        baseYaw = null;
+        lastSentYaw = null;
+
+        window.addEventListener('deviceorientation', handleOrientation);
         setStatus("ACTIVE — look straight ahead to calibrate");
         document.getElementById('startBtn').textContent = 'Tracking Active';
         document.getElementById('startBtn').disabled = true;
 
-        // Hér er tékkað hvort tenging við Pi'inn sé að nást
+        // Confirm Pi is reachable
         fetch('/headtracking', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -123,6 +97,27 @@
         }).then(r => r.json())
           .then(d => log("Pi connected: " + JSON.stringify(d)))
           .catch(e => log("Pi connection failed: " + e.message));
+    }
+
+    function startTracking() {
+        log("Requesting sensor permission...");
+
+        if (typeof DeviceOrientationEvent !== 'undefined' &&
+            typeof DeviceOrientationEvent.requestPermission === 'function') {
+            // Requires explicit permission (iOS Safari style)
+            DeviceOrientationEvent.requestPermission()
+                .then(response => {
+                    if (response === 'granted') {
+                        activateTracking();
+                    } else {
+                        log("Sensor permission denied");
+                    }
+                })
+                .catch(e => log("Permission error: " + e.message));
+        } else {
+            // Android/Quest — no permission prompt needed
+            activateTracking();
+        }
     }
 </script>
 </body>
