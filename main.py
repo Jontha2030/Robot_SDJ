@@ -106,11 +106,11 @@ def controller_sturcture():
                 elif event.code == ecodes.ABS_HAT0X:
                     if event.value == -1:
                         # Færir servo fyrir myndavél 30 gráður til vinstri
-                        cameraservominus()
+                        cameraservoplus()
                         print("D-pad left")
                     elif event.value == 1:
                         # Færir servo fyrir myndavél 30 gráður til hægri
-                        cameraservoplus()
+                        cameraservominus()
                         print("D-pad right")
                         
     # Hér er gripið það þegar notandi slekkur á forriti og séð til þess að öllum ferlum sé hætt
