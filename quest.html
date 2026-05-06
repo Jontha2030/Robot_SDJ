@@ -26,6 +26,8 @@
     <img id="stream" src="/video" alt="Camera Feed"> <!-- Mynda kubburinn þar sem myndir frá Pi myndavél birtast -->
     <div id="status">Head tracking: OFF</div> <!-- Texta kubbur þar sem birt er debug línur frá kóða -->
     <div id="log">Log: waiting...</div> <!-- -II- -->
+    <div id="yawDisplay" style="color: lime; font-size: 24px; margin-top: 10px; font-family: monospace;">
+    Raw yaw: --</div>
     <button id="startBtn" onclick="startTracking()">Start Head Tracking</button> <!-- Takki sem á að kveikja á VR gleraugna stýringu (virkar ekki eins og er) -->
 
 <!-- Síðan kemur fullt af Javascript kóða til að forrita virkni í vefsíðu -->
@@ -57,29 +59,27 @@
         }).catch(e => log("Send error: " + e.message));
     }
     
-    // 
     function handleOrientation(e) {
-        if (!tracking) return; // Forrit heldur bara áfram ef tracking er virkt sem gerist ef maður ýtir á takkann á vefsíðuni
+        // Show raw value regardless of tracking state
+        document.getElementById('yawDisplay').textContent = 
+            'Raw alpha: ' + (e.alpha ? e.alpha.toFixed(1) : 'null');
 
-        let raw = e.alpha || 0;  // Upplýsingar frá VR gleraugum um hvert viðkomandi er að horfa
+        if (!tracking) return;
 
-        // Hér er sett miðjuna á servo (90°) miðað við þar sem viðkomandi var að horfa þegar hann ýtti á takkann.
-        // Það er héðan í frá dregið frá gildunum sem koma beint frá VR gelraugunum
+        let raw = e.alpha || 0;
+
         if (baseYaw === null) {
             baseYaw = raw;
-            log("Calibrated. Move your head!");
+            log("Calibrated at " + raw.toFixed(1) + "°. Move your head!");
             return;
         }
 
-        // Hér er reiknað hvert viðkomandi er að horfa miðað við miðju
         let yaw = raw - baseYaw;
-
-        // Breyti bilinu þar sem servo'ar komast bara í 180° 
         if (yaw > 180)  yaw -= 360;
         if (yaw < -180) yaw += 360;
 
         log("Yaw: " + yaw.toFixed(1) + "°");
-        sendYaw(yaw); // Set gildi frá VR gleraugum í fallið sem sendir gögnin á bakenda vefsíðu, sem Pi'inn getur síðan lesið
+        sendYaw(yaw);
     }
 
     function startTracking() {
