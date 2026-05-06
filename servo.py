@@ -30,16 +30,19 @@ def cameraservoplus():
     
 
 def cameraservominus():
-    if kit.servo[3].angle <= 30:
-        kit.servo[3].angle = 30
+    angle = kit.servo[3].angle 
 
-    kit.servo[3].angle -= 30
+    angle -= 30
+    if angle <= 30:
+        angle = 30
 
-    if kit.servo[3].angle >= 180:
-        kit.servo[3].angle = 180
+    if angle >= 180:
+        angle = 180
 
-    if kit.servo[3].angle <= 0:
-        kit.servo[3].angle = 0
+    if angle <= 0:
+        angle = 0
+
+    kit.servo[3].angle = angle
 
 
 
