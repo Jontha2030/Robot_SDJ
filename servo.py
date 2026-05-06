@@ -34,7 +34,7 @@ def cameraservominus():
     print(angle)
 
     angle -= 30
-    if angle < 30:
+    if angle < 25:
         angle = 0
 
     if angle >= 180:
