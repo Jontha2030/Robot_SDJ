@@ -20,13 +20,14 @@ from fpv_server import start_server
 # -------- FASTAR ---------
 SPEED = 200
 
-# Þetta fall kveikjir á SRF02 fjarlægðar skynjurunum þegar að forritið ræsist. Þeir eru alltaf í gangi þar sem að það
-# virðist vera vesen að slökkva og kveikja á þeim
+# Þetta fall sér um að ræsa hluta forritsins sem eiga að vera í gangi alltaf.
+# Það eru SRF02 fjarlægðarskynjararnir og allt sem er á bakvið Pi myndavélina.
 def initialize_components():
     SRF02Thread = threading.Thread(target=distance_scan, daemon=True) # SRF02 forritið er keyrt á sér þráð þar sem það
     # virkar sem endalaus while loopa sem er stanslaust að mæla fjarlæg. Síðan er hægt að virkja önnur forrit sem nýta
     # þessar mælingar
-    fpvThread = threading.Thread(target=start_server, daemon=True)
+    fpvThread = threading.Thread(target=start_server, daemon=True) # Þessi þráður er fyrir vefsíðuna sem Pi'in hýsir og
+    # sendir stanslaust á myndir frá Pi myndavélinni
     SRF02Thread.start()
     fpvThread.start()
 
