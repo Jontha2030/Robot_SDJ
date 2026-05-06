@@ -21,7 +21,7 @@ def cameraservoplus():
     print(angle)
 
     angle += 30
-    if angle < 155:
+    if angle > 155:
         angle = 180
 
     if angle >= 180:
