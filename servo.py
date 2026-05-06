@@ -16,6 +16,7 @@ def servo_init(servos):
         kit.servo[servo_nr].angle = 90
 
 
+#Fall sem lætur servo fyrir myndavél færast til vinstri
 def cameraservoplus():
     angle = kit.servo[3].angle 
 
@@ -30,8 +31,9 @@ def cameraservoplus():
         angle = 0
 
     kit.servo[3].angle = angle
-    
 
+    
+#Fall sem lætur servo fyrir myndavél færast til hægri
 def cameraservominus():
     angle = kit.servo[3].angle 
 
