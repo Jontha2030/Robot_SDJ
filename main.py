@@ -5,6 +5,8 @@ from __init__ import Button_Press
 import avoid_obstacles
 from fpv_server import start_server
 from servo import cameraservominus, cameraservoplus
+from SRF02 import distance_scan
+import threading
 
 
 # -------- LÝSING ---------
