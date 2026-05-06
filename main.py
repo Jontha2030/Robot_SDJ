@@ -4,6 +4,7 @@ from play import play_random, stop_playing
 from __init__ import Button_Press
 import avoid_obstacles
 from fpv_server import start_server
+from servo import cameraservominus, cameraservoplus
 
 
 # -------- LÝSING ---------
@@ -92,18 +93,22 @@ def controller_sturcture():
             elif event.type == ecodes.EV_ABS:
                 if event.code == ecodes.ABS_HAT0Y:
                     if event.value == -1:
+                        # Kveikir á lagi
+                        play_random()
                         print("D-pad up")
                     elif event.value == 1:
+                        # Slekkur á lagi
+                        stop_playing()
                         print("D-pad down")
 
                 elif event.code == ecodes.ABS_HAT0X:
                     if event.value == -1:
-                        # Slekkur á lagi
-                        stop_playing()
+                        # Færir servo fyrir myndavél 30 gráður til vinstri
+                        cameraservominus()
                         print("D-pad left")
                     elif event.value == 1:
-                        # Kveikir á lagi
-                        play_random()
+                        # Færir servo fyrir myndavél 30 gráður til hægri
+                        cameraservoplus()
                         print("D-pad right")
                         
     # Hér er gripið það þegar notandi slekkur á forriti og séð til þess að öllum ferlum sé hætt
