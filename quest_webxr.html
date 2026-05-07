@@ -150,7 +150,7 @@
         const rawYaw = yawFromQuaternion(orientation);
 
         if (baseYaw === null) {
-            baseYaw = 90;
+            baseYaw = rawYaw;
             setStatus('Tracking active');
             log('Calibrated. Look left/right to move the servo.');
             return;

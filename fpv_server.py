@@ -77,7 +77,6 @@ def index():
 # Þetta er fall sem ræsir vefsíðuna en það er sér fall til þess að geta kallað á það sem þráð í main
 def start_server():
     print("FPV server running...")
-    kit.servo[PAN_SERVO].angle = 90
     app.run(host='0.0.0.0', port=5000, threaded=True)
 
 if __name__ == '__main__':
