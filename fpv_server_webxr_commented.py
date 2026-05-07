@@ -50,7 +50,6 @@ except Exception as exc:
 try:
     # Picamera2 is the Raspberry Pi camera library.
     from picamera2 import Picamera2
-    print("Pi camera detected")
 except Exception as exc:
     # If the camera library is missing or unavailable, the server still runs.
     print(f"Pi camera disabled: {exc}")
