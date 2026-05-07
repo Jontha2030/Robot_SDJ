@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <!-- Makes the page scale correctly on mobile/Quest Browser. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>RPi WebXR Head Servo Control</title>
+
+    <style>
+        /* Use border-box so widths include padding/borders. */
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #050505;
+            color: white;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+            /* Center everything vertically and horizontally. */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        /* The live camera feed from the Raspberry Pi. */
+        #stream {
+            width: 100%;
+            max-width: 960px;
+            max-height: 58vh;
+            object-fit: contain;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+        }
+
+        /* Box that contains buttons and debug values. */
+        .panel {
+            width: 100%;
+            max-width: 960px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 14px;
+        }
+
+        button {
+            padding: 14px 22px;
+            font-size: 17px;
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            background: #2e7d32;
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        #stopBtn { background: #8b1e1e; }
+
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .value {
+            color: #77ff77;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+        #log {
+            color: #ffd966;
+            overflow-wrap: anywhere;
+        }
+
+        /* WebXR needs a WebGL canvas, but we do not use it for visible graphics. */
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <!--
+        Live MJPEG camera feed.
+        The Flask /video route continuously sends JPEG frames.
+    -->
+    <img id="stream" src="/video" alt="Camera Feed">
+
+    <div class="panel">
+        <div class="row">
+            <!--
+                Browser security requires WebXR to start from a user action,
+                such as pressing this button.
+            -->
+            <button id="startBtn">Enter VR + Start Head Tracking</button>
+            <button id="stopBtn" disabled>Stop</button>
+        </div>
+
+        <!-- Debug readouts shown on the page. -->
+        <p>Status: <span id="status" class="value">Waiting</span></p>
+        <p>Yaw: <span id="yaw" class="value">--</span></p>
+        <p>Servo: <span id="servo" class="value">--</span></p>
+        <p id="log">Open this page in Quest Browser, then press the green button.</p>
+    </div>
+
+    <!-- Hidden canvas used only so WebXR can create an XR-compatible WebGL layer. -->
+    <canvas id="xrCanvas"></canvas>
+
+<script>
+    // -------------------------------------------------------------------------
+    // Global XR state
+    // -------------------------------------------------------------------------
+
+    // The active WebXR session. Null when VR tracking is stopped.
+    let xrSession = null;
+
+    // Coordinate system used for headset pose tracking.
+    let xrRefSpace = null;
+
+    // WebGL context required by WebXR.
+    let gl = null;
+
+    // The yaw angle when tracking starts.
+    // This becomes the "forward" direction.
+    let baseYaw = null;
+
+    // Last yaw value sent to the Raspberry Pi.
+    // Used to avoid sending tiny repeated changes.
+    let lastSentYaw = null;
+
+    // Last time a yaw value was sent.
+    // Used to limit the send rate.
+    let lastSendTime = 0;
+
+
+    // -------------------------------------------------------------------------
+    // Tuning constants
+    // -------------------------------------------------------------------------
+
+    // Maximum number of /headtracking messages per second.
+    // 20 Hz is usually enough for servos and reduces network spam.
+    const SEND_HZ = 20;
+
+    // Ignore yaw changes smaller than this.
+    // This prevents servo jitter from tiny headset movements.
+    const DEADZONE_DEGREES = 1.5;
+
+    // Limit yaw to -90 to +90 degrees.
+    // The Python server also clamps this, so there is protection on both sides.
+    const YAW_LIMIT_DEGREES = 90;
+
+
+    // -------------------------------------------------------------------------
+    // Get references to HTML elements
+    // -------------------------------------------------------------------------
+
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusEl = document.getElementById('status');
+    const yawEl = document.getElementById('yaw');
+    const servoEl = document.getElementById('servo');
+    const logEl = document.getElementById('log');
+
+
+    // -------------------------------------------------------------------------
+    // Small utility functions
+    // -------------------------------------------------------------------------
+
+    function log(message) {
+        // Send message to browser developer console and visible page log.
+        console.log(message);
+        logEl.textContent = message;
+    }
+
+    function setStatus(message) {
+        statusEl.textContent = message;
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function radToDeg(rad) {
+        return rad * 180 / Math.PI;
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Quaternion to yaw conversion
+    // -------------------------------------------------------------------------
+
+    // Gleraugun skila snúnings gögnum sem svokölluðum "quaternion" sem inniheldur alla hreyfings ása og 
+    // hraða
+    // Við viljum bara hægri og vinstri hreyfingar en það er það sem eftirfarandi fall sér um
+    function yawFromQuaternion(q) {
+        const x = q.x, y = q.y, z = q.z, w = q.w;
+
+        // Þetta er bara stöðuluð leið til þess að gera það
+        const sinyCosp = 2 * (w * y + x * z);
+        const cosyCosp = 1 - 2 * (y * y + x * x);
+
+        return radToDeg(Math.atan2(sinyCosp, cosyCosp));
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Sendi yaw (hægri og vinstri hreyfigar) til Raspberry Pi
+    // -------------------------------------------------------------------------
+
+    async function sendYaw(yaw) {
+        const now = performance.now();
+
+        // Rate limit: höfum fast þak yfir hversu mikið leyft er að senda yfir netið.
+        if (now - lastSendTime < 1000 / SEND_HZ) return;
+
+        // Deadzone: sendir ekki upplýsingar ef þær eru mjög litlar. Þetta ætti að minnka álag á servo og netið
+        if (lastSentYaw !== null && Math.abs(yaw - lastSentYaw) < DEADZONE_DEGREES) return;
+
+        lastSendTime = now;
+        lastSentYaw = yaw;
+
+        try {
+            // Hér er sent yaw upplýsingaranr sem JSON á vefsíðuna, sem Pi'inn getur síðan lesið
+            const response = await fetch('/headtracking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ yaw })
+            });
+
+            // Pi'nn sendir líka gögn á vefsíðu (sem er staða servosins)
+            const data = await response.json();
+
+            if (data.ok) {
+                // Show the servo angle calculated by Python.
+                servoEl.textContent = data.servo_angle + '°';
+            } else {
+                log('Pi error: ' + JSON.stringify(data));
+            }
+        } catch (err) {
+            // This usually means the Pi/ngrok connection failed.
+            log('Send error: ' + err.message);
+        }
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Main WebXR frame loop (Þetta er keyrt á vinnsluhraða VR gleraugna)
+    // -------------------------------------------------------------------------
+
+    function onXRFrame(time, frame) {
+        // Stop doing work if the session ended.
+        if (!xrSession) return;
+
+        // Ask WebXR to call this function again on the next headset frame.
+        xrSession.requestAnimationFrame(onXRFrame);
+
+        // Hér er náð í upplýsingarnar frá VR gleraugunum
+        const pose = frame.getViewerPose(xrRefSpace);
+        if (!pose) return;
+
+        // Vill bara fá það sem kallast "orientation" en það er hvert viðkomandi er að horfa og hversu hratt hann hreyfir haus
+        const orientation = pose.transform.orientation;
+
+
+        const rawYaw = yawFromQuaternion(orientation);
+
+        // First valid frame becomes the calibration direction.
+        // Wherever the user is looking at this moment becomes yaw = 0.
+        // Þegar notandi ýtar á takkann sem hefur VR stjórnun, er stefnan sem hann er að horfa látin vera núll staða servos
+        // (sem er 90°)
+        if (baseYaw === null) {
+            baseYaw = 90;
+            setStatus('Tracking active');
+            log('Calibrated. Look left/right to move the servo.');
+            return;
+        }
+
+        // Convert absolute yaw into yaw relative to starting direction.
+        let yaw = rawYaw - baseYaw;
+
+        // Handle wraparound at ±180 degrees.
+        // Example: going from 179 to -179 should be a 2 degree change, not 358.
+        if (yaw > 180) yaw -= 360;
+        if (yaw < -180) yaw += 360;
+
+        // Limit to the servo control range.
+        yaw = clamp(yaw, -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES);
+
+        // Update visible readout.
+        yawEl.textContent = yaw.toFixed(1) + '°';
+
+        // Send the yaw to Python/Flask.
+        sendYaw(yaw);
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Start WebXR
+    // -------------------------------------------------------------------------
+
+    async function startXR() {
+        try {
+            // WebXR requires a secure context.
+            // ngrok HTTPS satisfies this requirement.
+            if (!window.isSecureContext) {
+                log('WebXR usually requires HTTPS. Use ngrok HTTPS or run Flask with HTTPS certificates.');
+                return;
+            }
+
+            // Check that this browser exposes the WebXR API.
+            if (!navigator.xr) {
+                log('navigator.xr is not available in this browser. Use Quest Browser and HTTPS.');
+                return;
+            }
+
+            // Check whether immersive VR sessions are supported.
+            const supported = await navigator.xr.isSessionSupported('immersive-vr');
+            if (!supported) {
+                log('immersive-vr WebXR session is not supported in this browser/device.');
+                return;
+            }
+
+            // WebXR needs a WebGL context even if we are not rendering a real VR scene.
+            const canvas = document.getElementById('xrCanvas');
+            gl = canvas.getContext('webgl', { xrCompatible: true });
+            if (!gl) {
+                log('Could not create WebGL context.');
+                return;
+            }
+
+            // Ask the browser/headset to enter immersive VR mode.
+            // This must happen after a user gesture, which is why it is called
+            // from the Start button click handler.
+            xrSession = await navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor']
+            });
+
+            // When the XR session ends, reset the page UI.
+            xrSession.addEventListener('end', onXREnd);
+
+            // Make the WebGL context compatible with XR.
+            await gl.makeXRCompatible();
+
+            // Create the XR render layer.
+            // Even though this project mostly uses tracking data, WebXR expects
+            // a render state for immersive sessions.
+            xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, gl) });
+
+            // Request a local reference space.
+            // "local" means tracking relative to the user's starting position.
+            xrRefSpace = await xrSession.requestReferenceSpace('local');
+
+            // Reset calibration and filtering state.
+            baseYaw = null;
+            lastSentYaw = null;
+            lastSendTime = 0;
+
+            // Update buttons and logs.
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            setStatus('Starting XR session');
+            log('XR session started. Hold your head forward for calibration.');
+
+            // Start the headset frame loop.
+            xrSession.requestAnimationFrame(onXRFrame);
+        } catch (err) {
+            log('WebXR start error: ' + err.message);
+            setStatus('Error');
+        }
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Stop WebXR
+    // -------------------------------------------------------------------------
+
+    async function stopXR() {
+        // Ending the session triggers onXREnd().
+        if (xrSession) await xrSession.end();
+    }
+
+    function onXREnd() {
+        // Clear XR state.
+        xrSession = null;
+        xrRefSpace = null;
+
+        // Reset UI.
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        setStatus('Stopped');
+        log('XR session ended.');
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Check Raspberry Pi connection on page load
+    // -------------------------------------------------------------------------
+
+    async function checkPiStatus() {
+        try {
+            const response = await fetch('/status');
+            const data = await response.json();
+
+            // This confirms the webpage can reach Flask.
+            log('Pi connected. Servo hardware: ' + data.hardware_servo + ', camera: ' + data.camera);
+        } catch (err) {
+            log('Could not reach Pi status endpoint: ' + err.message);
+        }
+    }
+
+
+    // -------------------------------------------------------------------------
+    // Wire buttons to functions
+    // -------------------------------------------------------------------------
+
+    startBtn.addEventListener('click', startXR);
+    stopBtn.addEventListener('click', stopXR);
+
+    // Run status check immediately when the page loads.
+    checkPiStatus();
+</script>
+</body>
+</html>
