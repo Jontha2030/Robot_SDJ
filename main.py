@@ -1,12 +1,12 @@
 from evdev import InputDevice, ecodes
 from motor import forward, backwards, right, left, stop
 from play import play_random, stop_playing
-from SRF02 import distance_scan
 from __init__ import Button_Press
-import threading
-import time
 import avoid_obstacles
 from fpv_server import start_server
+from servo import cameraservominus, cameraservoplus
+from SRF02 import distance_scan
+import threading
 
 
 # -------- LÝSING ---------
@@ -38,7 +38,7 @@ def controller_sturcture():
         dev = InputDevice("/dev/input/event4")
 
         #Skillgreini takka
-        BTN_X = 304
+        BTN_X = 304   
         BTN_CIRCLE = 305
         BTN_TRIANGLE = 307
         BTN_SQUARE = 308
@@ -51,7 +51,7 @@ def controller_sturcture():
 
         print("Controller ready")
 
-        #Ef ýtt er á taka þá gerist eitthvað
+            #Ef ýtt er á taka þá gerist eitthvað
         for event in dev.read_loop():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
@@ -105,10 +105,12 @@ def controller_sturcture():
 
                 elif event.code == ecodes.ABS_HAT0X:
                     if event.value == -1:
-                        
+                        # Færir servo fyrir myndavél 30 gráður til vinstri
+                        cameraservoplus()
                         print("D-pad left")
                     elif event.value == 1:
-                        
+                        # Færir servo fyrir myndavél 30 gráður til hægri
+                        cameraservominus()
                         print("D-pad right")
                         
     # Hér er gripið það þegar notandi slekkur á forriti og séð til þess að öllum ferlum sé hætt
