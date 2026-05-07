@@ -15,7 +15,7 @@ app = Flask(__name__) # Nota Flask til þess að búa til vefsíðu
 
 # Hugmyndin er að geta hreyft servo'a með VR gleraugunum (ekki virkandi)
 PAN_SERVO = 3
-kit.servo[PAN_SERVO].angle = 90
+
 
 #camera = Picamera2()
 #camera.configure(camera.create_video_configuration(
@@ -77,6 +77,7 @@ def index():
 # Þetta er fall sem ræsir vefsíðuna en það er sér fall til þess að geta kallað á það sem þráð í main
 def start_server():
     print("FPV server running...")
+    kit.servo[PAN_SERVO].angle = 90
     app.run(host='0.0.0.0', port=5000, threaded=True)
 
 if __name__ == '__main__':
