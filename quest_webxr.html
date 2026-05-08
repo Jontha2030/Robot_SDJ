@@ -8,6 +8,7 @@
 
     <title>RPi WebXR Head Servo Control</title>
 
+    <!-- Hér kemur skreyting á vefsíðu -->
     <style>
         /* Use border-box so widths include padding/borders. */
         * { box-sizing: border-box; }
@@ -88,6 +89,7 @@
     </style>
 </head>
 <body>
+    <!-- Hér kemur uppsetning notandaviðmóts sem inniheldur takka og texta box sem birta stöðu forrits -->
     <!--
         Live MJPEG camera feed.
         The Flask /video route continuously sends JPEG frames.
@@ -116,7 +118,7 @@
 
 <script>
     // -------------------------------------------------------------------------
-    // Global XR state
+    // Global XR state (Hér er notað WebXR sem er API til að tala við VR gleraugu)
     // -------------------------------------------------------------------------
 
     // The active WebXR session. Null when VR tracking is stopped.
@@ -142,7 +144,7 @@
 
 
     // -------------------------------------------------------------------------
-    // Tuning constants
+    // Tuning constants (hér eru fastar sem tengjast servo og eiginleikum umferð gagna)
     // -------------------------------------------------------------------------
 
     // Maximum number of /headtracking messages per second.
@@ -159,7 +161,8 @@
 
 
     // -------------------------------------------------------------------------
-    // Get references to HTML elements
+    // Get references to HTML elements (hér er skilgreint parta notandaviðmótsins (takkana og texta boxin) til þess að
+    // Javascript geti stýrt þeim)
     // -------------------------------------------------------------------------
 
     const startBtn = document.getElementById('startBtn');
@@ -171,7 +174,7 @@
 
 
     // -------------------------------------------------------------------------
-    // Small utility functions
+    // Small utility functions (Föll sem framkvæma einfalda, endurtekna útreikninga og sækja debug upplýsingar)
     // -------------------------------------------------------------------------
 
     function log(message) {
@@ -272,14 +275,13 @@
 
         const rawYaw = yawFromQuaternion(orientation);
 
-        // First valid frame becomes the calibration direction.
-        // Wherever the user is looking at this moment becomes yaw = 0.
         // Þegar notandi ýtar á takkann sem hefur VR stjórnun, er stefnan sem hann er að horfa látin vera núll staða servos
         // (sem er 90°)
         if (baseYaw === null) {
+            log("rawYaw was: " + rawYaw)
             baseYaw = 40;
             setStatus('Tracking active');
-            log('Calibrated. Look left/right to move the servo.');
+            log('Calibrated. Look left/right to move the servo. Yaw is now: ' + rawYaw - baseYaw);
             return;
         }
 
@@ -288,10 +290,12 @@
 
         // Handle wraparound at ±180 degrees.
         // Example: going from 179 to -179 should be a 2 degree change, not 358.
+        // (gleraugun geta farið heilan hring, en þá gerist ehv. spes með gögnin sem er höndlað hér)
         if (yaw > 180) yaw -= 360;
         if (yaw < -180) yaw += 360;
 
-        // Limit to the servo control range.
+        // Þar sem servo'inn getur bara verið frá 0-180° en VR gleraugun geta verið +-360°, þarf að passa að neyða 
+        // yaw gildið að að vera á servo bilinu
         yaw = clamp(yaw, -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES);
 
         // Update visible readout.
@@ -303,11 +307,13 @@
 
 
     // -------------------------------------------------------------------------
-    // Start WebXR
+    // Start WebXR 
     // -------------------------------------------------------------------------
 
     async function startXR() {
         try {
+            // Hér koma fullt af checkum og, ef þau ganga ekki upp, er sent lýsandi skilaboð
+
             // WebXR requires a secure context.
             // ngrok HTTPS satisfies this requirement.
             if (!window.isSecureContext) {
@@ -418,7 +424,7 @@
 
 
     // -------------------------------------------------------------------------
-    // Wire buttons to functions
+    // Wire buttons to functions (Hér er hengt virkni í takkan sem byrja og stoppa VR gleraugna viðmótið)
     // -------------------------------------------------------------------------
 
     startBtn.addEventListener('click', startXR);

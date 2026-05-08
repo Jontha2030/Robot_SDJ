@@ -1,8 +1,7 @@
 """
-fpv_server_webxr_commented.py
+fpv_server_webxr.py
 
-Raspberry Pi Flask server for a Quest/WebXR head-tracking servo project.
-
+Lýsing
 What this server does:
 1. Hosts the HTML/JavaScript page that the Quest Browser opens.
 2. Provides a /video MJPEG stream from the Pi camera.
@@ -10,50 +9,29 @@ What this server does:
 4. Converts yaw into a servo angle and moves the servo.
 5. Provides /status so the webpage can check whether the Pi/server is alive.
 
-Run this on the Raspberry Pi, not on your laptop:
-    python3 fpv_server_webxr_commented.py
+1. RPi'inn hýsir vefsíðu í gegnum ngrok sem hægt er að opna með tölvu sem er með browser (og þá aðallega Quest VR gleraugum)
+2. RPi'inn sendir straum af myndum úr Picamera myndavél á vefsíðu sem skilar sér því í myndbands streymi
+3. Vefsíðan les hreyfi upplýsingar úr VR gleraugum og sendir á bakenda vefsíðu
+4. RPi'inn les þær upplýsingar af bakendanum og hreyfir servo mótóra sem nemur hreyfingu notanda, en á þessum servo mótór situr myndavélin
 
-Then, in another Pi terminal:
+
+Keyrt í gegnum main.py
+
+Í annari tölvu, með ngrok sett upp, þarf að keyra:
     ngrok http 5000
+sem hýsir https vefsíðu í gegnum ngrok (nauðsynlegt til að fá heimild til að lesa upplýsingar af VR gleraugum)
 
-Open the HTTPS ngrok URL in Quest Browser.
 """
 
 import io
 import time
-import threading
 from pathlib import Path
 
 from flask import Flask, Response, request, jsonify, send_from_directory
 
+from __init__ import kit, lock
 
-# -----------------------------------------------------------------------------
-# Optional hardware imports
-# -----------------------------------------------------------------------------
-# These imports depend on Raspberry Pi hardware/libraries.
-# During development, it is useful if the Flask website can still run even when
-# the servo or camera is disconnected. That is why these imports are wrapped in
-# try/except blocks instead of being allowed to crash the whole program.
-
-try:
-    # This imports your existing servo controller object and thread lock.
-    # "kit" is probably an Adafruit ServoKit instance from your __init__.py.
-    # "lock" prevents two threads from trying to move the servo at the same time.
-    from __init__ import kit, lock
-except Exception as exc:
-    # If the servo setup fails, run in simulation mode.
-    # The server will print servo angles instead of moving real hardware.
-    print(f"Servo hardware disabled: {exc}")
-    kit = None
-    lock = threading.Lock()
-
-try:
-    # Picamera2 is the Raspberry Pi camera library.
-    from picamera2 import Picamera2
-except Exception as exc:
-    # If the camera library is missing or unavailable, the server still runs.
-    print(f"Pi camera disabled: {exc}")
-    Picamera2 = None
+from picamera2 import Picamera2
 
 
 # -----------------------------------------------------------------------------
@@ -73,48 +51,36 @@ app = Flask(__name__)
 # Servo setup and mapping constants
 # -----------------------------------------------------------------------------
 
-# Servo channel on the ServoKit board.
-# In your original code, the pan servo was connected to channel 3.
+# Hér er skilgreint hvar servo er tengdur á PCB borðinu, en það eru 8 tengi, frá 0-7
 PAN_SERVO = 3
 
-# Normal hobby servos usually accept angles from 0 to 180 degrees.
+# Set snúnings mörk til þess að fá ekki "angle out of range" villu
 SERVO_MIN = 0
 SERVO_MAX = 180
 
-# Center position for the pan servo.
+# Miðjustaða
 SERVO_CENTER = 90
 
-# The headset yaw value is limited to -90 to +90 degrees.
-# -90 means looking far left, +90 means looking far right.
+# Þar sem að við látum servoinn alltaf byrja í 90° (miðjan), á hann bara að geta hreyfst í +-90°
 YAW_LIMIT_DEGREES = 90
 
-# Store the most recent angle so /status can report it.
+# Breyta sem mun vera sent á vefsíðu
 last_servo_angle = SERVO_CENTER
 
 
 def clamp(value, min_val, max_val):
-    """Keep value inside the range [min_val, max_val]."""
+    """Sér til þess að gildin sem send eru á servo'ana séu á bilinu 0-180°"""
     return max(min_val, min(max_val, value))
 
 
 def yaw_to_servo_angle(yaw_degrees):
     """
-    Convert Quest headset yaw into a servo angle.
-
-    The JavaScript sends yaw relative to the starting head direction:
-        -90 degrees = look left
-          0 degrees = look forward
-        +90 degrees = look right
-
-    This function maps that to:
-          0 degrees = servo left
-         90 degrees = servo center
-        180 degrees = servo right
-
-    Because SERVO_CENTER is 90, the formula is simple:
-        servo_angle = 90 + yaw
-
-    Then the result is clamped to protect the servo from invalid angles.
+    Frá bakendanum, sem unnin er af Javascript, er staða snúnings miðuð við að 
+        -90° = alveg til vinstri
+          0° = beint áfram
+        +90° = alveg til hægri
+        
+    en, þar sem að servo'inn táknar 90° sem miðjuna, hliðrum við því sem kemur frá Javascript um akkúrat 90° (0 + 90 = 90)
     """
     yaw = clamp(float(yaw_degrees), -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES)
     angle = SERVO_CENTER + yaw
@@ -123,34 +89,24 @@ def yaw_to_servo_angle(yaw_degrees):
 
 def set_pan_servo(angle):
     """
-    Move the pan servo, or simulate movement if no servo hardware is available.
-
-    This is the only function that actually talks to the servo hardware.
-    Keeping all servo movement here makes the code easier to debug.
+    Þetta fall talar við servo mótórinn og hreyfir hann í samræmi við VR gleraugun.
+    "angle" sem er sett inn í þetta fall er búið að fara í gegnum yaw_to_servo_angle() fallið
     """
     global last_servo_angle
 
     # Make sure the requested angle is safe.
     angle = int(clamp(angle, SERVO_MIN, SERVO_MAX))
 
-    # Save this even in simulation mode so /status still reports useful data.
+    # Þetta var hugsað fyrir það að birta stöðu servo's á vefsíðu
     last_servo_angle = angle
 
-    # If kit is None, the hardware import failed.
-    # In that case, print the intended angle instead of crashing.
-    if kit is None:
-        print(f"[SIM] Servo angle: {angle}")
-        return
-
-    # Use a lock because Flask is running with threaded=True.
-    # Multiple requests could arrive close together, and the hardware library
-    # should not be accessed by two threads at exactly the same time.
+    # Nota lock til þess að breyta stöðu servo'a, en þetta er gerir okkur kleyft að skilgreina servo controller tenginguna
+    # í einu falli, __init__ sem öll önnur föll í öllum forritum róbótans erfa
     with lock:
         kit.servo[PAN_SERVO].angle = angle
 
 
-# Center the servo when the server starts.
-# This is wrapped in try/except because hardware can fail independently of Flask.
+# Hér er sett servo'inn í miðjuna þegar forrit er ræst (höfum í try-except ef ehv. skyldi fara úrskeiðis)
 try:
     set_pan_servo(SERVO_CENTER)
 except Exception as exc:
@@ -161,39 +117,28 @@ except Exception as exc:
 # Camera setup
 # -----------------------------------------------------------------------------
 
-camera = None
+camera = None # Ef myndavélin er ekki skynjuð á forritið samt ennþá að ganga, það verður bara engin mynd á vefsíðunni
 
-# Only try to create the camera object if Picamera2 imported successfully.
-if Picamera2 is not None:
-    try:
-        camera = Picamera2()
+try:
+    camera = Picamera2()
 
-        # Configure the stream resolution.
-        # Lower resolution reduces bandwidth and latency.
-        camera.configure(camera.create_video_configuration(main={"size": (640, 480)}))
+    # Hér er skilgreint stærð myndar
+    camera.configure(camera.create_video_configuration(main={"size": (640, 480)}))
 
-        # Start the camera.
-        camera.start()
+    camera.start()
 
-        # Give the camera a moment to warm up before grabbing frames.
-        time.sleep(1)
+    # Ekki vitlaust að bíða í smá á meðan myndavél ræsist
+    time.sleep(1)
 
-        print("Pi camera started")
-    except Exception as exc:
-        print(f"Could not start Pi camera: {exc}")
-        camera = None
+    print("Pi camera started")
+except Exception as exc:
+    print(f"Could not start Pi camera: {exc}")
+    camera = None
 
 
 def generate_frames():
     """
-    Generate an MJPEG video stream for the browser.
-
-    MJPEG is basically a never-ending sequence of JPEG images.
-    The browser receives these images through the /video route and displays them
-    in the <img src="/video"> element in the HTML page.
-
-    If the camera is unavailable, this function sends an empty frame instead of
-    crashing. That lets you test WebXR and servo control without a camera.
+    Hér er sótt myndir af myndavélinni og send sem straumur af myndum á vefsíðu sem myndar því myndband
     """
     while True:
         # BytesIO is an in-memory file-like object.
@@ -207,7 +152,7 @@ def generate_frames():
             except Exception as exc:
                 print(f"Camera frame error: {exc}")
         else:
-            # No camera: keep the HTTP stream alive with empty data.
+            # Ef engin myndavél fynnst er sent tómt boð, en þá keyrir forritið a.mk..
             stream.write(b"")
 
         # Go back to the beginning of the memory buffer so stream.read() works.
@@ -221,12 +166,12 @@ def generate_frames():
             b"Content-Type: image/jpeg\r\n\r\n" + stream.read() + b"\r\n"
         )
 
-        # Aim for about 30 frames per second.
+        # Hér er hraði straums sem við stillum á 30fps
         time.sleep(1 / 30)
 
 
 # -----------------------------------------------------------------------------
-# Flask routes
+# Flask routes (þetta er bara klassísk vefforritun sem gervigreindin cookaði)
 # -----------------------------------------------------------------------------
 
 @app.route("/")
