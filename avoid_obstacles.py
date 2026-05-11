@@ -8,8 +8,8 @@ from __init__ import SRF02_data, Button_Press, lock
 # ---------Global breytur------------
 UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
 TURNING_SPEED = 100 # Hraði mótora í beygju
-FORWARD_SPEED = 200 # Hraði mótora þegar keyrt er beint áfram
-REVERSE_SPEED = 200 # Hraði mótora þegar bakkað er
+FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
+REVERSE_SPEED = 150 # Hraði mótora þegar bakkað er
 AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
 SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 
@@ -62,7 +62,7 @@ def avoid_obstacles():
                     backwards(REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
                     right(TURNING_SPEED)
-                    time.sleep(AVOID_TIMES)
+                    #time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                     
             elif 1 < distance_h < UPPER_BOUNDS: # Athugar hvort hægri skynjari sé innan marka
@@ -74,7 +74,7 @@ def avoid_obstacles():
                     backwards(REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
                     left(TURNING_SPEED)
-                    time.sleep(AVOID_TIMES)
+                    #time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                 
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
