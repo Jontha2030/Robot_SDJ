@@ -61,8 +61,8 @@ def avoid_obstacles():
                     time.sleep(0.01)
                     backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    right(TURNING_SPEED)
-                    #time.sleep(AVOID_TIMES)
+                    right(TURNING_SPEED, TURNING_SPEED)
+                    time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                     
             elif 1 < distance_h < UPPER_BOUNDS: # Athugar hvort hægri skynjari sé innan marka
@@ -73,14 +73,14 @@ def avoid_obstacles():
                     time.sleep(0.01)
                     backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    left(TURNING_SPEED)
-                    #time.sleep(AVOID_TIMES)
+                    left(TURNING_SPEED, TURNING_SPEED)
+                    time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                 
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
                 if current_state != "afram":
                     #print("You good, áfram!") #----Debug
-                    forward(FORWARD_SPEED-10, FORWARD_SPEED)
+                    forward(FORWARD_SPEED, FORWARD_SPEED-10)
                     current_state = "afram"
                     
     # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum
