@@ -28,7 +28,7 @@ def check_speed(speed):
 #Seigir mótor að fara áfram
 def forward(speed):
     speed = check_speed(speed)
-    send_motors((speed+14),-(speed-7))
+    send_motors((speed-100),-(speed-7))
 
 
 #Seigir mótor að fara afturábaka
