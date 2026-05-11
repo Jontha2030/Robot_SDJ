@@ -74,14 +74,12 @@ def controller_sturcture():
                 elif event.code == BTN_L1:
                     # Ef ýtt er á þennan takka er sjálfstýringar forritið keyrt 
                     Button_Press["state"] = False
-                    print("L1 pressed")
                     print("Entering AUTO-MODE...")
                     automodeThread = threading.Thread(target=avoid_obstacles.avoid_obstacles, daemon=True) # Þá er bara kveikt á sér
                     # þræði til þess að það sé ennþá hægt að hlusta á takka fjarstýringar
                     automodeThread.start()
                 elif event.code == BTN_L2:
                     # Ef ýtt er á þennan takka er slökkt á sjálfstýringu
-                    print("L2 pressed")
                     Button_Press["state"] = True
                     stop()
                     stop_playing()
@@ -94,24 +92,20 @@ def controller_sturcture():
             #Þetta er fyrir D-pad
             elif event.type == ecodes.EV_ABS:
                 if event.code == ecodes.ABS_HAT0Y:
-                    if event.value == -1:
+                    if event.value == -1: # D-pad up
                         # Kveikir á lagi
                         play_random()
-                        print("D-pad up")
-                    elif event.value == 1:
+                    elif event.value == 1: # D-pad down
                         # Slekkur á lagi
                         stop_playing()
-                        print("D-pad down")
 
                 elif event.code == ecodes.ABS_HAT0X:
-                    if event.value == -1:
+                    if event.value == -1: # D-pad left
                         # Færir servo fyrir myndavél 30 gráður til vinstri
                         cameraservoplus()
-                        print("D-pad left")
-                    elif event.value == 1:
+                    elif event.value == 1: # D-pad right
                         # Færir servo fyrir myndavél 30 gráður til hægri
                         cameraservominus()
-                        print("D-pad right")
                         
     # Hér er gripið það þegar notandi slekkur á forriti og séð til þess að öllum ferlum sé hætt
     except KeyboardInterrupt:
