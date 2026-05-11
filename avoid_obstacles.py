@@ -1,5 +1,5 @@
 from motor import forward, backwards, right, left, stop
-from speaker import Speaker
+from play import play_random, stop_playing
 import time
 import threading
 from servo import selfturning_servos, servo_init
@@ -24,8 +24,8 @@ def avoid_obstacles():
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
         
         # Spilar lag
-        speaker = Speaker()
-        speaker.play()
+        play_random()        
+
         print("AUTO-MODE active")
         
     except Exception as InitError:
@@ -42,6 +42,7 @@ def avoid_obstacles():
             
             if button_status:
                 print("Exiting AUTO-MODE...")
+                #stop_playing()
                 stop_event.set()
                 servothread.join(timeout=2)
                 break
