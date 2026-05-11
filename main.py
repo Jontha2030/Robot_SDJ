@@ -19,7 +19,7 @@ import threading
 
 # -------- FASTAR ---------
 SPEED_R = 200
-SPEED_L = SPEED_R*0.8
+SPEED_L = 180
 
 # Þetta fall sér um að ræsa hluta forritsins sem eiga að vera í gangi alltaf.
 # Það eru SRF02 fjarlægðarskynjararnir og allt sem er á bakvið Pi myndavélina.

@@ -80,7 +80,7 @@ def avoid_obstacles():
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
                 if current_state != "afram":
                     #print("You good, áfram!") #----Debug
-                    forward(FORWARD_SPEED*0.8, FORWARD_SPEED)
+                    forward(FORWARD_SPEED-10, FORWARD_SPEED)
                     current_state = "afram"
                     
     # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum
