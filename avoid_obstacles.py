@@ -59,7 +59,7 @@ def avoid_obstacles():
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
+                    backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
                     right(TURNING_SPEED)
                     #time.sleep(AVOID_TIMES)
@@ -71,7 +71,7 @@ def avoid_obstacles():
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
+                    backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
                     left(TURNING_SPEED)
                     #time.sleep(AVOID_TIMES)
@@ -80,7 +80,7 @@ def avoid_obstacles():
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
                 if current_state != "afram":
                     #print("You good, áfram!") #----Debug
-                    forward(FORWARD_SPEED)
+                    forward(FORWARD_SPEED*0.8, FORWARD_SPEED)
                     current_state = "afram"
                     
     # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum

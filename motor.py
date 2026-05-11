@@ -8,10 +8,10 @@ def send_motors(m1, m2):
     I2C_ADDRESS = 0x50
     bus = smbus.SMBus(1)
 
-    m1_speed = abs(m1)
+    m1_speed = abs(m1) # Hægra dekk
     m1_sign = 0 if m1 >= 0 else 1
 
-    m2_speed = abs(m2)
+    m2_speed = abs(m2) # Vinstra dekk
     m2_sign = 0 if m2 >= 0 else 1
 
     data = [m1_speed, m1_sign, m2_speed, m2_sign]
@@ -26,27 +26,31 @@ def check_speed(speed):
         return speed
     
 #Seigir mótor að fara áfram
-def forward(speed):
-    speed = check_speed(speed)
-    send_motors((speed-100),-(speed-7))
+def forward(speed_r, speed_l):
+    speed_r = check_speed(speed_r)
+    speed_l = check_speed(speed_l)
+    send_motors(speed_r, -speed_l)
 
 
 #Seigir mótor að fara afturábaka
-def backwards(speed):
-    speed = check_speed(speed)
-    send_motors(-(speed + 14), speed-7)
+def backwards(speed_r, speed_l):
+    speed_r = check_speed(speed_r)
+    speed_l = check_speed(speed_l)    
+    send_motors(-speed_r, speed_l)
 
 
 #Seigir mótor að fara til hægri
-def right(speed):
-    speed = check_speed(speed)
-    send_motors((speed + 15),speed)
+def right(speed_r, speed_l):
+    speed_r = check_speed(speed_r)
+    speed_l = check_speed(speed_l)    
+    send_motors(speed_r, speed_l)
 
 
 #Seigir mótor að fara til vinstri
-def left(speed):
-    speed = check_speed(speed)
-    send_motors(-(speed + 15),-speed)
+def left(speed_r, speed_l):
+    speed_r = check_speed(speed_r)
+    speed_l = check_speed(speed_l)    
+    send_motors(-speed_r, -speed_l)
 
 
 #Seigir mótor að stoppa
