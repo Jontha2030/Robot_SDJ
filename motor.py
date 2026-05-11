@@ -28,25 +28,25 @@ def check_speed(speed):
 #Seigir mótor að fara áfram
 def forward(speed):
     speed = check_speed(speed)
-    send_motors(speed + 15,-speed)
+    send_motors(speed + 12,-speed)
 
 
 #Seigir mótor að fara afturábaka
 def backwards(speed):
     speed = check_speed(speed)
-    send_motors(-(speed + 15), speed)
+    send_motors(-(speed + 12), speed)
 
 
 #Seigir mótor að fara til hægri
 def right(speed):
     speed = check_speed(speed)
-    send_motors(speed + 15,speed)
+    send_motors((speed + 15)*0.5,speed*0.5)
 
 
 #Seigir mótor að fara til vinstri
 def left(speed):
     speed = check_speed(speed)
-    send_motors(-(speed + 15),-speed)
+    send_motors(-(speed + 15)*0.5,-speed*0.5)
 
 
 #Seigir mótor að stoppa
