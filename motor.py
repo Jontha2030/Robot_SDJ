@@ -8,10 +8,10 @@ def send_motors(m1, m2):
     I2C_ADDRESS = 0x50
     bus = smbus.SMBus(1)
 
-    m1_speed = abs(m1) # Hægra dekk
+    m1_speed = abs(m1) # Vinstra dekk
     m1_sign = 0 if m1 >= 0 else 1
 
-    m2_speed = abs(m2) # Vinstra dekk
+    m2_speed = abs(m2) # Hægra dekk
     m2_sign = 0 if m2 >= 0 else 1
 
     data = [m1_speed, m1_sign, m2_speed, m2_sign]

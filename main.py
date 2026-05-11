@@ -57,7 +57,7 @@ def controller_sturcture():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
                     # Bakkar
-                    backwards(SPEED_R, SPEED_L-8) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
+                    backwards(SPEED_R-8, SPEED_L) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
                 elif event.code == BTN_CIRCLE:
                     # Beygjir til hægri
                     right(SPEED_R, SPEED_L)
