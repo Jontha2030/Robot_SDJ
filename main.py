@@ -3,7 +3,7 @@ from motor import forward, backwards, right, left, stop
 from play import play_random, stop_playing
 from __init__ import Button_Press
 import avoid_obstacles
-from fpv_server import start_server
+from fpv_server_webxr_headlocked import start_server
 from servo import cameraservominus, cameraservoplus
 from SRF02 import distance_scan
 import threading
@@ -18,7 +18,8 @@ import threading
 # 3) Spila lög
 
 # -------- FASTAR ---------
-SPEED = 200
+SPEED_R = 200
+SPEED_L = 180
 
 # Þetta fall sér um að ræsa hluta forritsins sem eiga að vera í gangi alltaf.
 # Það eru SRF02 fjarlægðarskynjararnir og allt sem er á bakvið Pi myndavélina.
@@ -56,16 +57,16 @@ def controller_sturcture():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
                     # Bakkar
-                    backwards(SPEED)
+                    backwards(SPEED_R-8, SPEED_L) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
                 elif event.code == BTN_CIRCLE:
                     # Beygjir til hægri
-                    right(SPEED)
+                    right(SPEED_R, SPEED_L)
                 elif event.code == BTN_TRIANGLE:
                     # Keyrir beint áfram
-                    forward(SPEED)
+                    forward(SPEED_R, SPEED_L)
                 elif event.code == BTN_SQUARE:
                     # Beygjir til vinstri
-                    left(SPEED)
+                    left(SPEED_R, SPEED_L)
                 elif event.code == BTN_R1:
                     # Stoppar mótóra
                     stop()
