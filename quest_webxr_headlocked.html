@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RPi WebXR Head-Locked FPV Servo Control</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: #050505;
+            color: white;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            padding: 18px;
+        }
+        #stream {
+            width: 100%;
+            max-width: 960px;
+            max-height: 58vh;
+            object-fit: contain;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+        }
+        .panel {
+            width: 100%;
+            max-width: 960px;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 14px;
+        }
+        button {
+            padding: 14px 22px;
+            font-size: 17px;
+            border: 0;
+            border-radius: 10px;
+            cursor: pointer;
+            color: white;
+            background: #2e7d32;
+        }
+        button:disabled { background: #555; cursor: not-allowed; }
+        #stopBtn { background: #8b1e1e; }
+        .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .value { color: #77ff77; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        #log { color: #ffd966; overflow-wrap: anywhere; }
+        canvas { display: none; }
+    </style>
+</head>
+<body>
+    <!-- Normal browser preview before entering immersive VR. -->
+    <img id="stream" src="/video" alt="Camera Feed">
+
+    <div class="panel">
+        <div class="row">
+            <button id="startBtn">Enter VR + Start Head Tracking</button>
+            <button id="stopBtn" disabled>Stop</button>
+        </div>
+        <p>Status: <span id="status" class="value">Waiting</span></p>
+        <p>Yaw: <span id="yaw" class="value">--</span></p>
+        <p>Servo: <span id="servo" class="value">--</span></p>
+        <p id="log">Open this page in Quest Browser, then press the green button.</p>
+    </div>
+
+    <!-- WebXR renders into this canvas while inside immersive-vr. -->
+    <canvas id="xrCanvas"></canvas>
+
+<script>
+    let xrSession = null;
+    let xrRefSpace = null;
+    let gl = null;
+    let baseYaw = null;
+    let lastSentYaw = null;
+    let lastSendTime = 0;
+
+    // WebGL resources for the head-locked video panel.
+    let shaderProgram = null;
+    let quadBuffer = null;
+    let videoTexture = null;
+    let uProjectionLoc = null;
+    let uDistanceLoc = null;
+    let uTextureLoc = null;
+    let aPositionLoc = null;
+    let aTexCoordLoc = null;
+
+    const SEND_HZ = 20;
+    const DEADZONE_DEGREES = 1.5;
+    const YAW_LIMIT_DEGREES = 90;
+
+    // The virtual camera screen shown inside VR.
+    // Because it is rendered in view-space, it follows your head like a HUD.
+    const PANEL_DISTANCE_METERS = 2.0;
+    const PANEL_WIDTH_METERS = 1.9;
+    const PANEL_HEIGHT_METERS = 1.07; // 16:9-ish
+
+    const streamImg = document.getElementById('stream');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const statusEl = document.getElementById('status');
+    const yawEl = document.getElementById('yaw');
+    const servoEl = document.getElementById('servo');
+    const logEl = document.getElementById('log');
+
+    function log(message) {
+        console.log(message);
+        logEl.textContent = message;
+    }
+
+    function setStatus(message) {
+        statusEl.textContent = message;
+    }
+
+    function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    function radToDeg(rad) {
+        return rad * 180 / Math.PI;
+    }
+
+    // WebXR gives the headset orientation as a quaternion.
+    // This extracts yaw, i.e. left-right rotation around the vertical axis.
+    function yawFromQuaternion(q) {
+        const x = q.x, y = q.y, z = q.z, w = q.w;
+        const sinyCosp = 2 * (w * y + x * z);
+        const cosyCosp = 1 - 2 * (y * y + x * x);
+        return radToDeg(Math.atan2(sinyCosp, cosyCosp));
+    }
+
+    async function sendYaw(yaw) {
+        const now = performance.now();
+        if (now - lastSendTime < 1000 / SEND_HZ) return;
+        if (lastSentYaw !== null && Math.abs(yaw - lastSentYaw) < DEADZONE_DEGREES) return;
+
+        lastSendTime = now;
+        lastSentYaw = yaw;
+
+        try {
+            const response = await fetch('/headtracking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ yaw })
+            });
+            const data = await response.json();
+            if (data.ok) {
+                servoEl.textContent = data.servo_angle + '°';
+            } else {
+                log('Pi error: ' + JSON.stringify(data));
+            }
+        } catch (err) {
+            log('Send error: ' + err.message);
+        }
+    }
+
+    function compileShader(type, source) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, source);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const msg = gl.getShaderInfoLog(shader);
+            gl.deleteShader(shader);
+            throw new Error('Shader compile failed: ' + msg);
+        }
+        return shader;
+    }
+
+    function initHeadLockedVideoRenderer() {
+        const vertexSource = `
+            attribute vec2 aPosition;
+            attribute vec2 aTexCoord;
+            uniform mat4 uProjection;
+            uniform float uDistance;
+            varying vec2 vTexCoord;
+
+            void main() {
+                // aPosition is already in headset/view space.
+                // z = -uDistance puts the video panel directly in front of your eyes.
+                // Since we do NOT multiply by the headset view matrix, the panel follows head movement.
+                gl_Position = uProjection * vec4(aPosition.x, aPosition.y, -uDistance, 1.0);
+                vTexCoord = aTexCoord;
+            }
+        `;
+
+        const fragmentSource = `
+            precision mediump float;
+            varying vec2 vTexCoord;
+            uniform sampler2D uTexture;
+
+            void main() {
+                gl_FragColor = texture2D(uTexture, vTexCoord);
+            }
+        `;
+
+        const vertexShader = compileShader(gl.VERTEX_SHADER, vertexSource);
+        const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentSource);
+
+        shaderProgram = gl.createProgram();
+        gl.attachShader(shaderProgram, vertexShader);
+        gl.attachShader(shaderProgram, fragmentShader);
+        gl.linkProgram(shaderProgram);
+
+        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+            throw new Error('Shader link failed: ' + gl.getProgramInfoLog(shaderProgram));
+        }
+
+        aPositionLoc = gl.getAttribLocation(shaderProgram, 'aPosition');
+        aTexCoordLoc = gl.getAttribLocation(shaderProgram, 'aTexCoord');
+        uProjectionLoc = gl.getUniformLocation(shaderProgram, 'uProjection');
+        uDistanceLoc = gl.getUniformLocation(shaderProgram, 'uDistance');
+        uTextureLoc = gl.getUniformLocation(shaderProgram, 'uTexture');
+
+        const w = PANEL_WIDTH_METERS / 2;
+        const h = PANEL_HEIGHT_METERS / 2;
+
+        // Two triangles. Each vertex has:
+        // x, y, u, v
+        // Texture v is flipped because browser images and WebGL texture coordinates differ.
+        const vertices = new Float32Array([
+            -w, -h, 0, 1,
+             w, -h, 1, 1,
+            -w,  h, 0, 0,
+            -w,  h, 0, 0,
+             w, -h, 1, 1,
+             w,  h, 1, 0,
+        ]);
+
+        quadBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        videoTexture = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+        // Placeholder black pixel until the MJPEG image has a frame.
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGBA,
+            1,
+            1,
+            0,
+            gl.RGBA,
+            gl.UNSIGNED_BYTE,
+            new Uint8Array([0, 0, 0, 255])
+        );
+    }
+
+    function updateVideoTexture() {
+        if (!streamImg.complete || streamImg.naturalWidth === 0) return;
+
+        gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+
+        try {
+            // Copy the current /video MJPEG frame into the VR texture.
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, streamImg);
+        } catch (err) {
+            // If the frame is temporarily invalid, skip it instead of crashing the XR session.
+            console.warn('Texture update skipped:', err.message);
+        }
+    }
+
+    function drawHeadLockedVideoPanel(view) {
+        gl.useProgram(shaderProgram);
+        gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+
+        gl.enableVertexAttribArray(aPositionLoc);
+        gl.vertexAttribPointer(aPositionLoc, 2, gl.FLOAT, false, 16, 0);
+
+        gl.enableVertexAttribArray(aTexCoordLoc);
+        gl.vertexAttribPointer(aTexCoordLoc, 2, gl.FLOAT, false, 16, 8);
+
+        gl.uniformMatrix4fv(uProjectionLoc, false, view.projectionMatrix);
+        gl.uniform1f(uDistanceLoc, PANEL_DISTANCE_METERS);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, videoTexture);
+        gl.uniform1i(uTextureLoc, 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    function renderXRScene(frame, pose) {
+        const baseLayer = xrSession.renderState.baseLayer;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, baseLayer.framebuffer);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        gl.disable(gl.DEPTH_TEST);
+
+        updateVideoTexture();
+
+        // Draw once for each eye.
+        for (const view of pose.views) {
+            const viewport = baseLayer.getViewport(view);
+            gl.viewport(viewport.x, viewport.y, viewport.width, viewport.height);
+            drawHeadLockedVideoPanel(view);
+        }
+    }
+
+    function onXRFrame(time, frame) {
+        if (!xrSession) return;
+        xrSession.requestAnimationFrame(onXRFrame);
+
+        const pose = frame.getViewerPose(xrRefSpace);
+        if (!pose) return;
+
+        // Render the camera feed as a floating screen that follows your head.
+        renderXRScene(frame, pose);
+
+        // Still use the same headset pose to control the servo.
+        const orientation = pose.transform.orientation;
+        const rawYaw = yawFromQuaternion(orientation);
+
+        if (baseYaw === null) {
+            baseYaw = rawYaw;
+            setStatus('Tracking active');
+            log('Calibrated. The VR camera panel follows your head; look left/right to move the servo.');
+            return;
+        }
+
+        let yaw = rawYaw - baseYaw;
+        if (yaw > 180) yaw -= 360;
+        if (yaw < -180) yaw += 360;
+        yaw = clamp(yaw, -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES);
+
+        yawEl.textContent = yaw.toFixed(1) + '°';
+        sendYaw(yaw);
+    }
+
+    async function startXR() {
+        try {
+            if (!window.isSecureContext) {
+                log('WebXR usually requires HTTPS. Use ngrok HTTPS or run Flask with HTTPS certificates.');
+                return;
+            }
+
+            if (!navigator.xr) {
+                log('navigator.xr is not available in this browser. Use Quest Browser and HTTPS.');
+                return;
+            }
+
+            const supported = await navigator.xr.isSessionSupported('immersive-vr');
+            if (!supported) {
+                log('immersive-vr WebXR session is not supported in this browser/device.');
+                return;
+            }
+
+            const canvas = document.getElementById('xrCanvas');
+            gl = canvas.getContext('webgl', { xrCompatible: true, alpha: false });
+            if (!gl) {
+                log('Could not create WebGL context.');
+                return;
+            }
+
+            initHeadLockedVideoRenderer();
+
+            xrSession = await navigator.xr.requestSession('immersive-vr', {
+                optionalFeatures: ['local-floor', 'bounded-floor']
+            });
+
+            xrSession.addEventListener('end', onXREnd);
+            await gl.makeXRCompatible();
+            xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, gl) });
+
+            xrRefSpace = await xrSession.requestReferenceSpace('local');
+
+            baseYaw = null;
+            lastSentYaw = null;
+            lastSendTime = 0;
+
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            setStatus('Starting XR session');
+            log('XR session started. Hold your head forward for calibration.');
+
+            xrSession.requestAnimationFrame(onXRFrame);
+        } catch (err) {
+            log('WebXR start error: ' + err.message);
+            setStatus('Error');
+        }
+    }
+
+    async function stopXR() {
+        if (xrSession) await xrSession.end();
+    }
+
+    function onXREnd() {
+        xrSession = null;
+        xrRefSpace = null;
+        startBtn.disabled = false;
+        stopBtn.disabled = true;
+        setStatus('Stopped');
+        log('XR session ended.');
+    }
+
+    async function checkPiStatus() {
+        try {
+            const response = await fetch('/status');
+            const data = await response.json();
+            log('Pi connected. Servo hardware: ' + data.hardware_servo + ', camera: ' + data.camera);
+        } catch (err) {
+            log('Could not reach Pi status endpoint: ' + err.message);
+        }
+    }
+
+    startBtn.addEventListener('click', startXR);
+    stopBtn.addEventListener('click', stopXR);
+    checkPiStatus();
+</script>
+</body>
+</html>
