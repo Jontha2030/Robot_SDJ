@@ -1,5 +1,5 @@
 from motor import forward, backwards, right, left, stop
-from speaker import Speaker
+from play import play_random, stop_playing
 import time
 import threading
 from servo import selfturning_servos, servo_init
@@ -7,9 +7,9 @@ from __init__ import SRF02_data, Button_Press, lock
 
 # ---------Global breytur------------
 UPPER_BOUNDS = 40 # cm, Fjarlægð sem róbót byrjar að beygja við
-TURNING_SPEED = 200 # Hraði mótora í beygju
+TURNING_SPEED = 100 # Hraði mótora í beygju
 FORWARD_SPEED = 150 # Hraði mótora þegar keyrt er beint áfram
-REVERSE_SPEED = 160 # Hraði mótora þegar bakkað er
+REVERSE_SPEED = 150 # Hraði mótora þegar bakkað er
 AVOID_TIMES = 0.1 # Fastur tími sem róbót hefur mótora í gangi þegar hann er að forðast hluti
 SWEEP_TIME = 0.1 # Tíminn sem tekur servo'a að taka einn sveim
 
@@ -24,8 +24,8 @@ def avoid_obstacles():
         servo_init([0,1]) # Þetta virkjar servo'a og gefur þeim upphafsstöðuna 90°, sem er miðjan á bili þeirra (0-180°)
         
         # Spilar lag
-        speaker = Speaker()
-        speaker.play()
+        play_random()        
+
         print("AUTO-MODE active")
         
     except Exception as InitError:
@@ -42,6 +42,7 @@ def avoid_obstacles():
             
             if button_status:
                 print("Exiting AUTO-MODE...")
+                #stop_playing()
                 stop_event.set()
                 servothread.join(timeout=2)
                 break
@@ -58,9 +59,9 @@ def avoid_obstacles():
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
+                    backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    right(TURNING_SPEED)
+                    right(TURNING_SPEED, TURNING_SPEED)
                     time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                     
@@ -70,16 +71,16 @@ def avoid_obstacles():
                     # Kalla á föllin sem keyra mótórana með Motor controllernum
                     stop()
                     time.sleep(0.01)
-                    backwards(REVERSE_SPEED)
+                    backwards(REVERSE_SPEED, REVERSE_SPEED)
                     time.sleep(AVOID_TIMES)
-                    left(TURNING_SPEED)
+                    left(TURNING_SPEED, TURNING_SPEED)
                     time.sleep(AVOID_TIMES)
                     current_state = "beygja"
                 
             else: # Ef engin hætta er skynjuð, keyrir bíllinn bara áfram
                 if current_state != "afram":
                     #print("You good, áfram!") #----Debug
-                    forward(FORWARD_SPEED)
+                    forward(FORWARD_SPEED, FORWARD_SPEED-10)
                     current_state = "afram"
                     
     # Hér er gripið errora og þegar notandi slekkur á forritinu og séð til þess að slökkt er á mótórum

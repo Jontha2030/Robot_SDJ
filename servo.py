@@ -7,13 +7,50 @@ kit = ServoKit(channels=8)
 
 # Skilgreina í hvaða númer servo'arnir eru tengdir á borðinu
 # eru frá 0-7 (8 pláss/channels)
-servos = [0, 1]
+servos = [0, 1, 3]
 
 # Lætur servoa snúa í miðju
 def servo_init(servos):
     for servo_nr in servos:
         #print("test", servo_nr) #----DEBUG
         kit.servo[servo_nr].angle = 90
+
+
+#Fall sem lætur servo fyrir myndavél færast til vinstri
+def cameraservoplus():
+    angle = kit.servo[3].angle 
+
+    angle += 30
+    if angle > 155:
+        angle = 180
+
+    if angle >= 180:
+        angle = 180
+
+    if angle < 0:
+        angle = 0
+
+    kit.servo[3].angle = angle
+
+    
+#Fall sem lætur servo fyrir myndavél færast til hægri
+def cameraservominus():
+    angle = kit.servo[3].angle 
+
+    angle -= 30
+    if angle < 25:
+        angle = 0
+
+    if angle >= 180:
+        angle = 180
+
+    if angle < 0:
+        angle = 0
+
+    kit.servo[3].angle = angle
+
+
+
 
 
 #Fall sem lætur servos snúa sjálfkrafa
@@ -51,6 +88,7 @@ def selfturning_servos():
             kit.servo[0].angle = angle
             kit.servo[1].angle = 90 + (90-angle)
             time.sleep(0.05)
+        
         
 
 
