@@ -57,16 +57,16 @@ def controller_sturcture():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
                     # Bakkar
-                    backwards(SPEED_R-8, SPEED_L) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
+                    backwards(SPEED_L-8, SPEED_R) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
                 elif event.code == BTN_CIRCLE:
                     # Beygjir til hægri
-                    right(SPEED_R, SPEED_L)
+                    right(SPEED_L, SPEED_R)
                 elif event.code == BTN_TRIANGLE:
                     # Keyrir beint áfram
-                    forward(SPEED_R, SPEED_L)
+                    forward(SPEED_L, SPEED_R)
                 elif event.code == BTN_SQUARE:
                     # Beygjir til vinstri
-                    left(SPEED_R, SPEED_L)
+                    left(SPEED_L, SPEED_R)
                 elif event.code == BTN_R1:
                     # Stoppar mótóra
                     stop()
