@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>RPi WebXR Head-Locked FPV Servo Control</title>
+    <!-- Hér er útlit vefsíðu byggt upp -->
     <style>
         * { box-sizing: border-box; }
         body {
@@ -54,7 +55,7 @@
     </style>
 </head>
 <body>
-    <!-- Normal browser preview before entering immersive VR. -->
+    <!-- Normal browser preview before entering immersive VR. (Hér er búið til alla takka og gefið þeim merkingar sem hægt er að vísa í forriti) -->
     <img id="stream" src="/video" alt="Camera Feed">
 
     <div class="panel">
@@ -71,6 +72,9 @@
     <!-- WebXR renders into this canvas while inside immersive-vr. -->
     <canvas id="xrCanvas"></canvas>
 
+<!-- Hér bakenda forritun vefsíðu höndluð. Hún felst í því að nota WebXR sem les upplýsingar af VR gleraugum og setja það í breytur sem Python forritið 
+ á RPi'inum getur lesið og þar með nýtt það í að skipa servo fyrir. Bakendinn sér líka til þess að viðeigandi gildi séu prentuð á skjáin ásamt viðeigandi
+ villu upplýsingum. Það birtir líka raun stöðu servos með því að taka við aðsentum gildum frá RPi'inum -->
 <script>
     let xrSession = null;
     let xrRefSpace = null;
@@ -107,6 +111,7 @@
     const servoEl = document.getElementById('servo');
     const logEl = document.getElementById('log');
 
+    // Fall sem tekur við alskyns skilaboðum og prentar þau í box á vefsíðu. Þetta gætu verið villu skilaboð eða hefðbudnin status skilaboð
     function log(message) {
         console.log(message);
         logEl.textContent = message;
@@ -116,10 +121,12 @@
         statusEl.textContent = message;
     }
 
+    // Fall sem hægt er að nota til þess að neyða gildi til að hafa einhver mörk en VR gleraugun eru með mikið stærra bil en servoinn
     function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
     }
 
+    // Búið til fall til þess að breyta rad í deg þar sem það er snyrtilegra
     function radToDeg(rad) {
         return rad * 180 / Math.PI;
     }
@@ -133,6 +140,7 @@
         return radToDeg(Math.atan2(sinyCosp, cosyCosp));
     }
 
+    // Þetta er fallið sem sendir snúnings upplýsingar í breytur sem RPi'inn les síðan.
     async function sendYaw(yaw) {
         const now = performance.now();
         if (now - lastSendTime < 1000 / SEND_HZ) return;
@@ -158,6 +166,11 @@
         }
     }
 
+    // Nú kemur hluti forritsins sem sér um að browser glugginn sem sést í VR gleraugum fylgir manni þegar maður horfir í kringum sig, en, það 
+    // var ekki hægt að breyta því með einföldum stillingum í gleraugunum
+
+    // Hér er tekið við C-kóðanum og sett hann í shader, sem er bara C-kóði sem er keyrður á skjákorti tölvu. Þessi kóði er keyrður á VR gleraugunum
+    // en Immersive-VR viðmótið sem við förum í til þess að stýra servo'inum bíður upp á svona forritun
     function compileShader(type, source) {
         const shader = gl.createShader(type);
         gl.shaderSource(shader, source);
@@ -169,7 +182,8 @@
         }
         return shader;
     }
-
+    // Hér kemur galinn kóða bútur sem býr til strengi af C kóða sem er sentur á shader'a sem vinna í immersive-vr heiminum. Þannig, þar er í raun búið
+    // til tölvuleik. 
     function initHeadLockedVideoRenderer() {
         const vertexSource = `
             attribute vec2 aPosition;
@@ -255,6 +269,8 @@
         );
     }
 
+    // Fall fyrir head-locking partinn. Það er nefnilega búinn til sér hlutur ("object") í Immersive-VR heiminum og á hann er Picamera myndin lýmd á
+    // Það þarf því að uppfæra þennan hlut með nýrri mynd endalaust
     function updateVideoTexture() {
         if (!streamImg.complete || streamImg.naturalWidth === 0) return;
 
@@ -268,7 +284,7 @@
             console.warn('Texture update skipped:', err.message);
         }
     }
-
+    // Hér er teiknað hlutinn sem er með lýmdu Pi myndinni
     function drawHeadLockedVideoPanel(view) {
         gl.useProgram(shaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
@@ -289,6 +305,7 @@
         gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
+    // Hér er notað WebXR Apann (API'ið) til þess að teikna myndina á VR gleraugun, en Apinn sér um að það sé gert rétt (það er ekki bara að birta mynd á skjá)
     function renderXRScene(frame, pose) {
         const baseLayer = xrSession.renderState.baseLayer;
 
@@ -307,6 +324,7 @@
         }
     }
 
+    // Hér kemur hlutinn sem less upplýsingarnar frá skynjurum VR glreaugnana. WebXR er API fyrir VR Quest gleraugu. Við viljum fá haus hreyfingar
     function onXRFrame(time, frame) {
         if (!xrSession) return;
         xrSession.requestAnimationFrame(onXRFrame);
@@ -319,7 +337,8 @@
 
         // Still use the same headset pose to control the servo.
         const orientation = pose.transform.orientation;
-        const rawYaw = yawFromQuaternion(orientation);
+        const rawYaw = yawFromQuaternion(orientation); // Hér er hrái lesturinn sendur í fall sem siktar út allt nema hægri og vinstri hreyfingar, en það
+        // eru einu upplýsingarnar sem við þurfum
 
         if (baseYaw === null) {
             baseYaw = rawYaw;
@@ -331,12 +350,14 @@
         let yaw = rawYaw - baseYaw;
         if (yaw > 180) yaw -= 360;
         if (yaw < -180) yaw += 360;
-        yaw = clamp(yaw, -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES);
+        yaw = clamp(yaw, -YAW_LIMIT_DEGREES, YAW_LIMIT_DEGREES); // Hér neytt snúnings gildi til þess að vera á bilinu -90° og 90° frá settum miðpunkti
+        // en það eru mörk servosins
 
         yawEl.textContent = yaw.toFixed(1) + '°';
         sendYaw(yaw);
     }
 
+    // Hér kemur stöðluð uppsetning á WebXR API'inu
     async function startXR() {
         try {
             if (!window.isSecureContext) {
@@ -403,6 +424,7 @@
         log('XR session ended.');
     }
 
+    // Hér er höndlað þá villu þegar að Pi'inn slökknar, en þá ætti vefsíðan að crash'a. Þá fær notandi lýsandi villu skilaboð
     async function checkPiStatus() {
         try {
             const response = await fetch('/status');
@@ -413,6 +435,8 @@
         }
     }
 
+    // Hér eru þær tvær línur sem sjá um að keyra og stoppa VR forritið. Þær hlusta á takkana á síðuni sem segja "Start headtracking" og "Stop" og 
+    // ef ýtt er á þá, er keyrt viðeigandi föll til þess að verða að ósk notanda
     startBtn.addEventListener('click', startXR);
     stopBtn.addEventListener('click', stopXR);
     checkPiStatus();
