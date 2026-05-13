@@ -169,7 +169,7 @@
     // Nú kemur hluti forritsins sem sér um að browser glugginn sem sést í VR gleraugum fylgir manni þegar maður horfir í kringum sig, en, það 
     // var ekki hægt að breyta því með einföldum stillingum í gleraugunum
 
-    // Hér er tekið við C-kóðanum og sett hann í shader, sem er bara C-kóði sem er keyrður á skjákorti tölvu. Þessi kóði er keyrður á VR gleraugunum
+    // Hér er tekið við GLSL-kóðanum og sett hann í shader, sem er bara kóði (svipaður og C) sem er keyrður á skjákorti tölvu. Þessi kóði er keyrður á VR gleraugunum
     // en Immersive-VR viðmótið sem við förum í til þess að stýra servo'inum bíður upp á svona forritun
     function compileShader(type, source) {
         const shader = gl.createShader(type);
@@ -182,7 +182,7 @@
         }
         return shader;
     }
-    // Hér kemur galinn kóða bútur sem býr til strengi af C kóða sem er sentur á shader'a sem vinna í immersive-vr heiminum. Þannig, þar er í raun búið
+    // Hér kemur galinn kóða bútur sem býr til strengi af GLSL kóða sem er sentur á shader'a sem vinna í immersive-vr heiminum. Þannig, þar er í raun búið
     // til tölvuleik. 
     function initHeadLockedVideoRenderer() {
         const vertexSource = `

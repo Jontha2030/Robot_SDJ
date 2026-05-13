@@ -18,8 +18,8 @@ import threading
 # 3) Spila lög
 
 # -------- FASTAR ---------
-SPEED_R = 200
-SPEED_L = 180
+SPEED_R = 140
+SPEED_L = 145
 
 # Þetta fall sér um að ræsa hluta forritsins sem eiga að vera í gangi alltaf.
 # Það eru SRF02 fjarlægðarskynjararnir og allt sem er á bakvið Pi myndavélina.
@@ -57,7 +57,7 @@ def controller_sturcture():
             if event.type == ecodes.EV_KEY and event.value == 1:
                 if event.code == BTN_X:
                     # Bakkar
-                    backwards(SPEED_L-8, SPEED_R) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
+                    backwards(SPEED_L, SPEED_R) # Þurfum mað laga hraðan hér af þvi hann fer ekki eins afturábak og áfram
                 elif event.code == BTN_CIRCLE:
                     # Beygjir til hægri
                     right(SPEED_L, SPEED_R)
